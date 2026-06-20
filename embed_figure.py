@@ -8,7 +8,7 @@ import zipfile, shutil, re, hashlib, struct, os
 DOCX = "Manuscript Metaverse.docx"
 PNG = "Figure1_Conceptual_Model.png"
 NEW_CX = 5634072            # keep width
-OLD_PAIR = 'cx="5634072" cy="3196397"'
+OLD_PAIR = 'cx="5634072" cy="3237972"'
 
 # compute new cy from PNG pixel aspect, keeping cx fixed
 img = open(PNG, "rb").read()

@@ -59,10 +59,11 @@ def block(x, y, w, h, header, fill=WHITE, bullets=None, subtitle=None,
                     fontsize=bullet_fs, color=INK, zorder=4)
 
 
-def arrow(p1, p2, lw=1.4, ms=16, z=3):
+def arrow(p1, p2, lw=1.4, ms=16, z=3, rad=0.0):
+    cs = f"arc3,rad={rad}" if rad else "arc3,rad=0"
     ax.add_patch(FancyArrowPatch(p1, p2, arrowstyle="-|>", mutation_scale=ms,
                                  linewidth=lw, color=INK, zorder=z,
-                                 shrinkA=2, shrinkB=2))
+                                 connectionstyle=cs, shrinkA=2, shrinkB=2))
 
 
 def plabel(x, y, text, fs=10, bold=True):
@@ -124,12 +125,13 @@ arrow((10.75, 4.70), (11.45, 4.70))         # b: BSAT -> BSUC
 plabel(7.85, 5.92, u"a\u2081 (+)", fs=9.5)
 plabel(7.85, 3.78, u"a\u2082 (+)", fs=9.5)
 plabel(11.10, 4.97, u"b (+)", fs=9.5)
-# direct effects (hypotheses H1, H2) - straight diagonals
-arrow((7.30, 6.95), (11.45, 5.75), lw=1.5)  # H1: UE -> BSUC
-arrow((7.30, 2.85), (11.45, 3.95), lw=1.5)  # H2: UX -> BSUC
-plabel(9.35, 6.86, u"H1 (+):  UE \u2192 BSUC  (c\u2081\u2032)", fs=9.6)
-plabel(9.35, 2.74, u"H2 (+):  UX \u2192 BSUC  (c\u2082\u2032)", fs=9.6)
-plabel(9.52, 3.30, u"H3 (+):  BSAT mediates\nUE / UX \u2192 BSUC", fs=8.9)
+# direct effects (hypotheses H1, H2) - gently curved so they bow clearly
+# around the mediator block instead of clipping its corners
+arrow((7.30, 7.10), (11.45, 5.85), lw=1.5, rad=0.18)   # H1: UE -> BSUC (bows above BSAT)
+arrow((7.30, 2.70), (11.45, 3.85), lw=1.5, rad=-0.18)  # H2: UX -> BSUC (bows below BSAT)
+plabel(9.30, 7.06, u"H1 (+):  UE \u2192 BSUC  (c\u2081\u2032)", fs=9.6)
+plabel(9.30, 2.60, u"H2 (+):  UX \u2192 BSUC  (c\u2082\u2032)", fs=9.6)
+plabel(9.52, 3.32, u"H3 (+):  BSAT mediates\nUE / UX \u2192 BSUC", fs=8.9)
 
 # ---------------- shading legend (top-right) ----------------
 def swatch(x, y, fill, label):
