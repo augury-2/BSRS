@@ -1,0 +1,4 @@
+Configuration,Condition,Role
+UE * UX * BSAT,UE,core
+UE * UX * BSAT,UX,core
+UE * UX * BSAT,BSAT,core

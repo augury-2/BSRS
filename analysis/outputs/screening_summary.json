@@ -1,0 +1,20 @@
+{
+  "N": 312,
+  "n_items": 20,
+  "missing_total": 0,
+  "straight_liners": 0,
+  "KMO": 0.9028,
+  "Bartlett_chi2": 3300.55,
+  "Bartlett_p": 0.0,
+  "Harman_first_factor_pct": 34.4,
+  "max_abs_skew": 6.387,
+  "max_abs_kurtosis": 43.955,
+  "n_nonnormal_items": 20,
+  "eigenvalues_gt1": [
+    6.879,
+    2.667,
+    2.116,
+    1.333,
+    1.032
+  ]
+}
