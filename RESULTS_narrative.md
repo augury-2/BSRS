@@ -2,26 +2,61 @@
 
 ## Sample characteristics
 
-> **⚠ Data note (please populate from your sampling records).** The dataset
-> provided (`Responses.xlsx`) contains only the reflective indicators for the four
-> constructs (UE, UX, BSAT, BSUC) and the two attention‑check items; it does **not**
-> include demographic or platform‑usage variables. The descriptive profile below is
-> therefore supplied as a **template** to be completed from your own sampling
-> records. The figures in brackets must be replaced with the actual sample
-> statistics; they are *not* derived from the analysed data file and should not be
-> reported until verified.
-
 The final sample comprised **312** complete responses from active users of
-avatar‑mediated platforms in India. [The sample was approximately balanced by
-gender (XX% women, XX% men), spanned young‑adult to middle‑aged cohorts
-(XX% aged 18–24, XX% 25–34, XX% 35+), and included students (XX%), salaried
-employees (XX%), and business professionals (XX%) across varied income bands.] In
-terms of immersive‑platform use, [a majority (XX%) reported engaging with
-metaverse‑type environments at least weekly, with substantial participation in
-NFT trading (XX%), social interaction and content creation (XX%), and virtual
-events (XX%)], confirming that respondents possessed meaningful experience with
-brand‑related activities in these environments. All 312 cases were retained: there
-were no missing values across the 20 items and no straight‑line response patterns.
+avatar‑mediated (metaverse‑type) platforms in India; all 312 cases were retained,
+as there were no missing values across the 20 items and no straight‑line response
+patterns. The demographic and platform‑usage profile of the sample is summarised
+in Table 1.
+
+The sample was reasonably balanced by gender, with a slight majority of women
+(**54.00%**, n = 169) relative to men (46.00%, n = 143). Respondents were
+distributed fairly evenly across the five age bands, from 18–22 years (20.51%) and
+23–28 years (24.04%) through to 42–45 years (17.95%), indicating that the sample
+spans younger and more established adult cohorts rather than being concentrated in
+a single generation. In terms of marital status, the largest groups were married
+respondents without children (38.78%) and single respondents (34.29%), followed by
+married respondents with children (26.93%). Occupationally, the sample combined
+business professionals (39.10%), salaried employees (32.69%), and students
+(28.21%), and monthly family income was spread across all bands, with the largest
+group in the INR 50,001–80,000 range (32.05%) and meaningful representation at both
+lower (≤ INR 30,000: 18.40%) and higher (≥ INR 80,001: 23.91%) ends.
+
+Crucially for the present study, respondents reported substantial experience with
+brand‑relevant activities in immersive environments. A clear majority engaged with
+metaverse‑type platforms at least weekly (**71.46%**: daily 16.67%, several times a
+week 31.41%, weekly 23.38%), and the remainder did so monthly (17.31%) or rarely
+(11.21%). Beyond mere access, large proportions of respondents had participated in
+behaviours central to brand experience in these settings: social interaction and
+content creation (52.56%), NFT interaction (45.19%), and virtual‑event
+participation (41.35%). Together, this profile confirms that the respondents
+possessed meaningful, behaviourally grounded exposure to brands in avatar‑mediated
+environments, supporting the relevance of the sample to the research questions.
+
+**Table 1. Sample profile (N = 312).**
+
+| Participants' information | n | % | Participants' information | n | % |
+|---------------------------|:--:|:----:|---------------------------|:--:|:----:|
+| **Gender** | | | **Metaverse engagement frequency** | | |
+| Male | 143 | 46.00 | Daily | 52 | 16.67 |
+| Female | 169 | 54.00 | Several times a week | 98 | 31.41 |
+| | | | Weekly | 73 | 23.38 |
+| **Age (years)** | | | Monthly | 54 | 17.31 |
+| 18–22 | 64 | 20.51 | Rarely | 35 | 11.21 |
+| 23–28 | 75 | 24.04 | | | |
+| 29–34 | 60 | 19.23 | **NFT interaction** | | |
+| 35–41 | 57 | 18.27 | Yes | 141 | 45.19 |
+| 42–45 | 56 | 17.95 | No | 171 | 54.81 |
+| **Marital status** | | | **Virtual event participation** | | |
+| Single | 107 | 34.29 | Yes | 129 | 41.35 |
+| Married with children | 84 | 26.93 | No | 183 | 58.65 |
+| Married without children | 121 | 38.78 | **Social interaction / content creation** | | |
+| | | | Yes | 164 | 52.56 |
+| **Occupation** | | | No | 148 | 47.44 |
+| Students | 88 | 28.21 | **Monthly family income** | | |
+| Job | 102 | 32.69 | INR 30,000 or less | 57 | 18.40 |
+| Business | 122 | 39.10 | INR 30,001–50,000 | 80 | 25.64 |
+| | | | INR 50,001–80,000 | 100 | 32.05 |
+| | | | INR 80,001 and above | 75 | 23.91 |
 
 ## Measurement model
 

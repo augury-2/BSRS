@@ -62,6 +62,49 @@ def heading(text, level):
         r.font.name = "Times New Roman"; r.font.color.rgb = RGBColor(0, 0, 0)
 
 
+def add_demo_table(rows, caption):
+    from docx.enum.table import WD_TABLE_ALIGNMENT
+    cap = doc.add_paragraph(); cap.paragraph_format.space_after = Pt(4)
+    rr = cap.add_run(caption); rr.bold = True
+    rr.font.name = "Times New Roman"; rr.font.size = Pt(11)
+    n_cols = len(rows[0])
+    t = doc.add_table(rows=0, cols=n_cols); t.style = "Table Grid"
+    t.alignment = WD_TABLE_ALIGNMENT.CENTER
+    # category sub-header rows (those with empty n/% but non-empty label)
+    cat_rows = set()
+    for i, row in enumerate(rows):
+        if i == 0:
+            continue
+        left_cat = row[0] and not row[1] and not row[2]
+        right_cat = row[3] and not row[4] and not row[5]
+        if left_cat or right_cat:
+            cat_rows.add(i)
+    for i, row in enumerate(rows):
+        cells = t.add_row().cells
+        for j in range(n_cols):
+            cells[j].text = str(row[j])
+            for p in cells[j].paragraphs:
+                p.paragraph_format.space_after = Pt(1)
+                p.paragraph_format.space_before = Pt(1)
+                if j in (1, 2, 4, 5):
+                    p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+                for r in p.runs:
+                    r.font.name = "Times New Roman"; r.font.size = Pt(10)
+                    is_header = (i == 0)
+                    # bold for header row and category labels
+                    if is_header:
+                        r.bold = True
+                    elif i in cat_rows and j in (0, 3):
+                        r.bold = True
+            if i == 0:
+                tcPr = cells[j]._tc.get_or_add_tcPr()
+                shd = OxmlElement('w:shd'); shd.set(qn('w:val'), 'clear')
+                shd.set(qn('w:color'), 'auto'); shd.set(qn('w:fill'), 'DDDDDD')
+                tcPr.append(shd)
+    doc.add_paragraph().paragraph_format.space_after = Pt(6)
+    return t
+
+
 # Title
 t = doc.add_paragraph(); t.alignment = WD_ALIGN_PARAGRAPH.CENTER
 r = t.add_run("Results"); r.bold = True
@@ -70,26 +113,61 @@ t.paragraph_format.space_after = Pt(12)
 
 # ---- Sample characteristics ----
 heading("Sample characteristics", 1)
-para("Data note (to be populated from your sampling records). The dataset provided "
-     "(Responses.xlsx) contains only the reflective indicators for the four "
-     "constructs (UE, UX, BSAT, BSUC) and the two attention-check items; it does "
-     "not include demographic or platform-usage variables. The descriptive profile "
-     "below is therefore supplied as a template to be completed from your own "
-     "sampling records. The bracketed figures must be replaced with the actual "
-     "sample statistics; they are not derived from the analysed data file and "
-     "should not be reported until verified.", italic=True, shade=True)
 para("The final sample comprised 312 complete responses from active users of "
-     "avatar-mediated platforms in India. [The sample was approximately balanced by "
-     "gender (XX% women, XX% men), spanned young-adult to middle-aged cohorts "
-     "(XX% aged 18\u201324, XX% 25\u201334, XX% 35+), and included students (XX%), salaried "
-     "employees (XX%), and business professionals (XX%) across varied income bands.] "
-     "In terms of immersive-platform use, [a majority (XX%) reported engaging with "
-     "metaverse-type environments at least weekly, with substantial participation in "
-     "NFT trading (XX%), social interaction and content creation (XX%), and virtual "
-     "events (XX%)], confirming that respondents possessed meaningful experience with "
-     "brand-related activities in these environments. All 312 cases were retained: "
-     "there were no missing values across the 20 items and no straight-line response "
-     "patterns.")
+     "avatar-mediated (metaverse-type) platforms in India; all 312 cases were "
+     "retained, as there were no missing values across the 20 items and no "
+     "straight-line response patterns. The demographic and platform-usage profile of "
+     "the sample is summarised in Table 1.")
+para("The sample was reasonably balanced by gender, with a slight majority of women "
+     "(54.00%, n = 169) relative to men (46.00%, n = 143). Respondents were "
+     "distributed fairly evenly across the five age bands, from 18\u201322 years (20.51%) "
+     "and 23\u201328 years (24.04%) through to 42\u201345 years (17.95%), indicating that the "
+     "sample spans younger and more established adult cohorts rather than being "
+     "concentrated in a single generation. In terms of marital status, the largest "
+     "groups were married respondents without children (38.78%) and single "
+     "respondents (34.29%), followed by married respondents with children (26.93%). "
+     "Occupationally, the sample combined business professionals (39.10%), salaried "
+     "employees (32.69%), and students (28.21%), and monthly family income was spread "
+     "across all bands, with the largest group in the INR 50,001\u201380,000 range "
+     "(32.05%) and meaningful representation at both lower (\u2264 INR 30,000: 18.40%) and "
+     "higher (\u2265 INR 80,001: 23.91%) ends.")
+para("Crucially for the present study, respondents reported substantial experience "
+     "with brand-relevant activities in immersive environments. A clear majority "
+     "engaged with metaverse-type platforms at least weekly (71.46%: daily 16.67%, "
+     "several times a week 31.41%, weekly 23.38%), and the remainder did so monthly "
+     "(17.31%) or rarely (11.21%). Beyond mere access, large proportions of "
+     "respondents had participated in behaviours central to brand experience in these "
+     "settings: social interaction and content creation (52.56%), NFT interaction "
+     "(45.19%), and virtual-event participation (41.35%). Together, this profile "
+     "confirms that the respondents possessed meaningful, behaviourally grounded "
+     "exposure to brands in avatar-mediated environments, supporting the relevance of "
+     "the sample to the research questions.")
+
+demo_rows = [
+    ["Participants' information", "n", "%", "Participants' information", "n", "%"],
+    ["Gender", "", "", "Metaverse engagement frequency", "", ""],
+    ["Male", "143", "46.00", "Daily", "52", "16.67"],
+    ["Female", "169", "54.00", "Several times a week", "98", "31.41"],
+    ["", "", "", "Weekly", "73", "23.38"],
+    ["Age (years)", "", "", "Monthly", "54", "17.31"],
+    ["18\u201322", "64", "20.51", "Rarely", "35", "11.21"],
+    ["23\u201328", "75", "24.04", "", "", ""],
+    ["29\u201334", "60", "19.23", "NFT interaction", "", ""],
+    ["35\u201341", "57", "18.27", "Yes", "141", "45.19"],
+    ["42\u201345", "56", "17.95", "No", "171", "54.81"],
+    ["Marital status", "", "", "Virtual event participation", "", ""],
+    ["Single", "107", "34.29", "Yes", "129", "41.35"],
+    ["Married with children", "84", "26.93", "No", "183", "58.65"],
+    ["Married without children", "121", "38.78", "Social interaction / content creation", "", ""],
+    ["", "", "", "Yes", "164", "52.56"],
+    ["Occupation", "", "", "No", "148", "47.44"],
+    ["Students", "88", "28.21", "Monthly family income", "", ""],
+    ["Job", "102", "32.69", "INR 30,000 or less", "57", "18.40"],
+    ["Business", "122", "39.10", "INR 30,001\u201350,000", "80", "25.64"],
+    ["", "", "", "INR 50,001\u201380,000", "100", "32.05"],
+    ["", "", "", "INR 80,001 and above", "75", "23.91"],
+]
+tbl = add_demo_table(demo_rows, "Table 1. Sample profile (N = 312).")
 
 # ---- Measurement model ----
 heading("Measurement model", 1)
