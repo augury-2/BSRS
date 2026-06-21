@@ -503,6 +503,55 @@ add_figure(f"{FIG}/Fig12_truth_table.png",
            "Figure 12. Truth-table configurations ranked by sufficiency consistency "
            "(green = coded sufficient for high BSUC).", 5.5)
 
+add_para(
+    "To make the logic underlying the intermediate solution transparent, Table 13a "
+    "reports the subset/superset analysis. Each row is a candidate sufficient term "
+    "formed by the logical AND of the presence of the indicated conditions; less "
+    "restrictive expressions (fewer conditions) are supersets and more restrictive "
+    "ones (more conditions) are subsets. The analysis exhibits the canonical "
+    "consistency\u2013coverage trade-off: as conditions are added, consistency rises "
+    "while coverage falls. The full conjunction UE \u00b7 UX \u00b7 BSAT attains the highest "
+    "consistency (0.857) and satisfies both the 0.80 raw-consistency and 0.70 PRI "
+    "thresholds, which is why it is retained; satisfaction alone (BSAT) has the "
+    "highest coverage (0.751) but a PRI (0.661) below threshold, confirming that "
+    "satisfaction is empirically important yet not, on its own, a trustworthy "
+    "sufficient recipe.", align="justify")
+add_table(
+    [["Combination", "# conditions", "Raw consistency", "PRI consistency", "Raw coverage"],
+     ["UE \u00b7 UX \u00b7 BSAT", "3", "0.857", "0.737", "0.497"],
+     ["UE \u00b7 BSAT", "2", "0.839", "0.725", "0.573"],
+     ["UX \u00b7 BSAT", "2", "0.829", "0.714", "0.604"],
+     ["BSAT", "1", "0.776", "0.661", "0.751"],
+     ["UE \u00b7 UX", "2", "0.774", "0.620", "0.566"],
+     ["UX", "1", "0.714", "0.568", "0.718"],
+     ["UE", "1", "0.685", "0.530", "0.698"]],
+    caption_above="Table 13a. Intermediate solution \u2014 subset/superset analysis "
+                  "(outcome = high Brand Success, BSUC).",
+    size=10, col_align=["left", "center", "center", "center", "center"])
+
+add_para(
+    "Table 13b presents the same result in the configuration format conventionally "
+    "used to report fsQCA solutions for a focal outcome (Fiss, 2011; Ragin, 2008), "
+    "i.e. as a single column describing the recipe for high Brand Success (BSUC) in "
+    "the metaverse, the role of each condition (core vs. peripheral), and the "
+    "associated consistency and coverage metrics. Because the parsimonious and "
+    "intermediate solutions coincide, all three conditions are core.", align="justify")
+add_table(
+    [["Condition / Metric", "Configuration 1"],
+     ["User Engagement (UE)", "\u25cf (core)"],
+     ["User Experience (UX)", "\u25cf (core)"],
+     ["Brand Satisfaction (BSAT)", "\u25cf (core)"],
+     ["Raw coverage", "0.497"],
+     ["Unique coverage", "0.497"],
+     ["Configuration consistency", "0.857"],
+     ["Overall solution coverage", "0.497"],
+     ["Overall solution consistency", "0.857"]],
+    caption_above="Table 13b. Configuration analysis for high Brand Success (BSUC) in the metaverse.",
+    col_align=["left", "center"],
+    note="Notation: \u25cf = core causal condition (present in both the parsimonious and "
+         "the intermediate solution); blank = absent or \u201cdon't care\u201d. Frequency "
+         "threshold = 4 cases; raw-consistency threshold = 0.80; PRI threshold = 0.70.")
+
 add_heading("4.4 Causal asymmetry (negated outcome)", 2)
 add_para(
     "A separate sufficiency analysis for low continuance (~BSUC) returns the "

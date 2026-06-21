@@ -433,6 +433,56 @@ illustrates the value of the PRI screen.
 > **Figure 12. Truth‑table configurations** ranked by sufficiency consistency
 > (green = coded sufficient). *File:* `analysis/figures/Fig12_truth_table.png`.
 
+To make the logic underlying the intermediate solution fully transparent, Table
+13a reports the **subset/superset analysis** for the intermediate solution. Each
+row is a candidate sufficient term formed by the set intersection (logical AND) of
+the *presence* of the indicated conditions; less restrictive expressions (fewer
+conditions) are supersets and more restrictive ones (more conditions) are subsets.
+The analysis exhibits the canonical consistency–coverage trade‑off: as conditions
+are added (moving toward subsets) consistency rises while coverage falls. The
+full conjunction **UE • UX • BSAT** attains the **highest consistency (0.857)** and
+satisfies both the 0.80 raw‑consistency and 0.70 PRI thresholds, which is why it is
+retained as the sufficient configuration; satisfaction alone (BSAT) has the
+**highest coverage (0.751)** but a PRI (0.661) below the threshold, confirming that
+satisfaction is empirically important yet not, on its own, a trustworthy
+sufficient recipe.
+
+**Table 13a. Intermediate solution — subset/superset analysis (outcome = high Brand Success, BSUC).**
+
+| Combination | # conditions | Raw consistency | PRI consistency | Raw coverage |
+|-------------|:-----------:|:---------------:|:---------------:|:------------:|
+| UE • UX • BSAT | 3 | **0.857** | **0.737** | 0.497 |
+| UE • BSAT | 2 | 0.839 | 0.725 | 0.573 |
+| UX • BSAT | 2 | 0.829 | 0.714 | 0.604 |
+| BSAT | 1 | 0.776 | 0.661 | 0.751 |
+| UE • UX | 2 | 0.774 | 0.620 | 0.566 |
+| UX | 1 | 0.714 | 0.568 | 0.718 |
+| UE | 1 | 0.685 | 0.530 | 0.698 |
+
+Table 13b presents the same result in the **configuration format** conventionally
+used to report fsQCA solutions for a focal outcome (Fiss, 2011; Ragin, 2008),
+i.e. as a single column describing the recipe for **high Brand Success (BSUC) in
+the metaverse**, the role of each condition (core vs. peripheral), and the
+associated consistency and coverage metrics. Because the parsimonious and
+intermediate solutions coincide, all three conditions are **core**.
+
+**Table 13b. Configuration analysis for high Brand Success (BSUC) in the metaverse.**
+
+| Condition / Metric | Configuration 1 |
+|--------------------|:---------------:|
+| User Engagement (UE) | ● (core) |
+| User Experience (UX) | ● (core) |
+| Brand Satisfaction (BSAT) | ● (core) |
+| Raw coverage | 0.497 |
+| Unique coverage | 0.497 |
+| Configuration consistency | 0.857 |
+| **Overall solution coverage** | **0.497** |
+| **Overall solution consistency** | **0.857** |
+
+*Notation: ● = core causal condition (present in both the parsimonious and the
+intermediate solution); blank = condition absent or "don't care". Frequency
+threshold = 4 cases; raw‑consistency threshold = 0.80; PRI threshold = 0.70.*
+
 ### 4.4 Causal asymmetry (analysis of the negated outcome)
 
 A separate sufficiency analysis for **low** continuance (~BSUC) returns the

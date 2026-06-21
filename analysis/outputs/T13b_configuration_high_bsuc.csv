@@ -1,0 +1,9 @@
+Condition,Configuration 1
+UE,● (core present)
+UX,● (core present)
+BSAT,● (core present)
+Raw coverage,0.497
+Unique coverage,0.497
+Consistency,0.857
+Overall solution coverage,0.497
+Overall solution consistency,0.857
