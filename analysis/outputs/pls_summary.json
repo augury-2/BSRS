@@ -1,0 +1,9 @@
+{
+  "N": 312,
+  "R2": {
+    "BSAT": 0.012592591419949506,
+    "BSUC": 0.007715857462326503
+  },
+  "bootstrap_samples": 5000,
+  "note": "Within-block reliability high; structural paths near zero."
+}
