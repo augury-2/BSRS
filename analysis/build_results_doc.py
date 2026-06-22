@@ -147,17 +147,34 @@ title.paragraph_format.space_after = Pt(12)
 
 para(
     "This section reports the empirical results of the two-stage analytical strategy "
-    "outlined in Section 3. Following recent methodological guidance in the IS "
-    "literature, we combine a symmetric, variance-based structural equation model "
+    "outlined in Section 3. Grounded in Self-Determination Theory (SDT), the model "
+    "treats user engagement (UE) and user experience (UX) as behavioural and perceptual "
+    "manifestations of basic psychological need satisfaction in the avatar-mediated "
+    "system (autonomy, competence, and relatedness), brand satisfaction (BSAT) as the "
+    "resulting evaluative judgment, and brand success / continuance (BSUC) as the "
+    "downstream brand-relevant outcome. Following recent methodological guidance in the "
+    "IS literature, we combine a symmetric, variance-based structural equation model "
     "(PLS-SEM) with an asymmetric, set-theoretic analysis (fuzzy-set Qualitative "
-    "Comparative Analysis, fsQCA). PLS-SEM evaluates the net, average effects "
-    "hypothesised among user engagement (UE), user experience (UX), brand satisfaction "
-    "(BSAT) and brand success / continuance (BSUC), whereas fsQCA examines whether "
-    "particular configurations of these conditions are necessary or sufficient for high "
-    "BSUC. All analyses were conducted on the full sample of N = 312 valid responses "
-    "measured on seven-point Likert scales, with no missing data. The complete, "
-    "reproducible analysis pipeline (data screening, calibration, estimation, and 5,000 "
-    "bootstrap resamples) is available with the supplementary materials."
+    "Comparative Analysis, fsQCA). PLS-SEM evaluates the net, average effects hypothesised "
+    "among UE, UX, BSAT, and BSUC, namely the direct effects of engagement and experience "
+    "on brand success (H1, H2) and the mediation of these effects through brand "
+    "satisfaction (H3), whereas fsQCA examines proposition P1, that multiple configurations "
+    "of UE, UX, and BSAT are sufficient for high BSUC (equifinality). All analyses were "
+    "conducted on the full sample of N = 312 valid responses measured on seven-point Likert "
+    "scales, with no missing data. The complete, reproducible analysis pipeline (data "
+    "screening, calibration, estimation, and 5,000 bootstrap resamples) is available with "
+    "the supplementary materials."
+)
+
+para(
+    "For clarity, the hypotheses tested are: H1, UE \u2192 BSUC (direct); H2, UX \u2192 BSUC "
+    "(direct); H3, UE and UX \u2192 BSAT \u2192 BSUC (brand satisfaction mediates the effects "
+    "of engagement and experience on brand success); and P1, multiple configurations of "
+    "{UE, UX, BSAT} are sufficient for high BSUC. Within the SDT lens, H1\u2013H3 predict "
+    "that fuller satisfaction of users\u2019 psychological needs (expressed as higher UE and "
+    "UX) translates into more favourable brand evaluations and, ultimately, greater brand "
+    "success, while P1 allows for equifinality, that is, several distinct need-satisfaction "
+    "profiles reaching the same outcome."
 )
 
 add_figure(os.path.join(FIG, "fig10_workflow_flowchart.png"))
@@ -206,8 +223,9 @@ t1.columns = ["Items", "Cronbach's \u03b1", "CR (\u03c1c)", "AVE"]
 t1.index.name = "Construct"
 para("Table 1. Construct reliability and convergent validity.", bold=True)
 add_table(t1, decimals=3,
-          note="Note. CR = composite reliability; AVE = average variance extracted. "
-               "Thresholds: \u03b1 and CR \u2265 0.70; AVE \u2265 0.50.")
+          note="Note. CR = composite reliability; AVE = average variance extracted, which "
+               "indexes convergent validity (not reliability). Thresholds: \u03b1 and CR \u2265 0.70; "
+               "AVE \u2265 0.50.")
 
 add_figure(os.path.join(FIG, "fig3_reliability_validity.png"))
 caption("Figure 3. Construct reliability and convergent validity against recommended thresholds.")
@@ -265,19 +283,30 @@ para(
 heading("4.3.1 Path Coefficients and Hypothesis Tests", 2)
 para(
     "Table 5 and Figure 1 summarise the structural estimates. Contrary to expectations, none of "
-    "the hypothesised paths reached statistical significance at the 0.05 level. Specifically, the "
-    "effects of UE and UX on BSAT (H3a, H3b), of UE and UX on BSUC (H1, H2), and of BSAT on BSUC "
-    "(H4) were all statistically non-significant, with bootstrap 95% confidence intervals that "
-    "straddled zero in every case. The standardised path coefficients were uniformly small in "
-    "magnitude (|\u03b2| \u2264 0.103)."
+    "the hypothesised relationships reached statistical significance at the 0.05 level. "
+    "Specifically, the direct effects of UE and UX on BSUC (H1, H2) and all three legs of the "
+    "hypothesised mediation chain (UE \u2192 BSAT, UX \u2192 BSAT, and BSAT \u2192 BSUC, which jointly "
+    "constitute H3) were statistically non-significant, with bootstrap 95% confidence intervals "
+    "that straddled zero in every case. The standardised path coefficients were uniformly small "
+    "in magnitude (|\u03b2| \u2264 0.103). Under the SDT lens, this implies that, in the present "
+    "sample, variation in need-satisfaction indicators (UE, UX) did not translate into variation "
+    "in brand evaluation (BSAT) or brand success (BSUC)."
 )
 
 # Table 5: structural paths
 pt = paths.copy()
+hyp_map = {
+    "UE->BSUC": "H1",
+    "UX->BSUC": "H2",
+    "UE->BSAT": "H3 (a1)",
+    "UX->BSAT": "H3 (a2)",
+    "BSAT->BSUC": "H3 (b)",
+}
+pt["Hyp"] = pt["Path"].map(hyp_map)
 pt.index = pt["Path"]
 pt.index.name = "Path"
-pt = pt[["Beta", "SE", "t", "p", "CI_2_5", "CI_97_5", "Significant"]]
-pt.columns = ["\u03b2", "SE", "t", "p", "CI 2.5%", "CI 97.5%", "Sig. (p<.05)"]
+pt = pt[["Hyp", "Beta", "SE", "t", "p", "CI_2_5", "CI_97_5", "Significant"]]
+pt.columns = ["Hyp.", "\u03b2", "SE", "t", "p", "CI 2.5%", "CI 97.5%", "Sig. (p<.05)"]
 para("Table 5. Structural model path coefficients (5,000 bootstrap resamples).", bold=True)
 add_table(pt, decimals=3,
           note="Note. \u03b2 = standardised path coefficient; CI = bias-corrected bootstrap "
@@ -325,13 +354,14 @@ add_table(r2q2, decimals=4,
 
 heading("4.3.3 Mediation Analysis", 2)
 para(
-    "We further tested the indirect (mediated) effects of UE and UX on BSUC through BSAT using "
-    "the bootstrap distribution of the product of path coefficients. As shown in Table 8, neither "
-    "indirect effect was statistically significant (UE \u2192 BSAT \u2192 BSUC: "
+    "Hypothesis H3 posits that brand satisfaction mediates the effects of UE and UX on BSUC. We "
+    "tested the indirect (mediated) effects using the bootstrap distribution of the product of "
+    "path coefficients. As shown in Table 8, neither indirect effect was statistically significant "
+    "(UE \u2192 BSAT \u2192 BSUC: "
     f"effect = {med.iloc[0]['Effect']:.4f}, p = {med.iloc[0]['p']:.3f}; "
     f"UX \u2192 BSAT \u2192 BSUC: effect = {med.iloc[1]['Effect']:.4f}, p = {med.iloc[1]['p']:.3f}). "
-    "Because the constituent direct paths were themselves non-significant, no mediation through "
-    "brand satisfaction was supported."
+    "Because the constituent direct paths were themselves non-significant, H3 is not supported and "
+    "no mediation through brand satisfaction is evidenced."
 )
 med_tab = med.copy()
 med_tab.index = med_tab["Indirect"]
@@ -397,8 +427,9 @@ para(
     f"and Figure 8, although all eight configurations were well populated, the highest raw "
     f"consistency attained by any configuration was only {tt_max:.3f}, below the 0.80 sufficiency "
     "cut-off. Consequently, no configuration qualified as a sufficient condition for high BSUC, and "
-    "the sufficiency solution is empty (solution coverage and consistency are undefined). In other "
-    "words, no combination of high or low UE, UX, and BSAT reliably produces high brand success."
+    "the sufficiency solution is empty (solution coverage and consistency are undefined). "
+    "Proposition P1 is therefore not supported: no combination of high or low UE, UX, and BSAT "
+    "reliably produces high brand success, and there is no evidence of equifinality in this sample."
 )
 tt_tab = tt.copy()
 tt_tab.index = tt_tab["Configuration"]
@@ -432,18 +463,12 @@ para(
 
 hyp = pd.DataFrame({
     "Path / Proposition": [
-        "H1: UE \u2192 BSUC",
-        "H2: UX \u2192 BSUC",
-        "H3a: UE \u2192 BSAT",
-        "H3b: UX \u2192 BSAT",
-        "H4: BSAT \u2192 BSUC",
-        "Mediation: UE/UX \u2192 BSAT \u2192 BSUC",
-        "P1: Sufficient configurations for high BSUC",
+        "H1: UE \u2192 BSUC (direct)",
+        "H2: UX \u2192 BSUC (direct)",
+        "H3: UE and UX \u2192 BSAT \u2192 BSUC (BSAT mediates)",
+        "P1: Multiple configurations of {UE, UX, BSAT} sufficient for high BSUC",
     ],
     "Result": [
-        "Not supported",
-        "Not supported",
-        "Not supported",
         "Not supported",
         "Not supported",
         "Not supported",

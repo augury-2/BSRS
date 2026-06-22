@@ -72,9 +72,9 @@ def fig_path_diagram():
                 ha="center", fontsize=8.5,
                 color=("#0a7d28" if p < 0.05 else "#b00020"))
 
-    arrow("UE", "BSAT", "H3a"); arrow("UX", "BSAT", "H3b")
+    arrow("UE", "BSAT", "H3"); arrow("UX", "BSAT", "H3")
     arrow("UE", "BSUC", "H1"); arrow("UX", "BSUC", "H2")
-    arrow("BSAT", "BSUC", "H4")
+    arrow("BSAT", "BSUC", "H3")
     ax.text(pos["BSAT"][0], pos["BSAT"][1]-1.05, f"R²={r2.get('BSAT',0):.3f}",
             ha="center", fontsize=8.5, style="italic")
     ax.text(pos["BSUC"][0], pos["BSUC"][1]-1.05, f"R²={r2.get('BSUC',0):.3f}",
