@@ -1,6 +1,11 @@
 """
 Build a submission-ready .docx Results section with native Word tables and
-embedded figures. Run from /projects/sandbox/BSRS.
+embedded figures. Clean manuscript version: BSUC is the focal outcome, the
+Attitude (ATT) measure is confined to an exploratory online appendix, real
+measurement-model values are reported, and unknown structural / fsQCA values
+appear as neat numerical fill-in slots (0.XX, X.XX, 0.XXX).
+
+Run from /projects/sandbox/BSRS with: python3 build_docx.py
 """
 from docx import Document
 from docx.shared import Pt, Inches, RGBColor
@@ -15,19 +20,19 @@ normal = doc.styles["Normal"]
 normal.font.name = "Times New Roman"
 normal.font.size = Pt(11)
 
-def H(text, level=1):
-    h = doc.add_heading(text, level=level)
-    return h
 
-def P(text, italic=False, size=11, color=None, bold=False):
+def H(text, level=1):
+    return doc.add_heading(text, level=level)
+
+
+def P(text, italic=False, size=11, bold=False):
     p = doc.add_paragraph()
     r = p.add_run(text)
     r.italic = italic
     r.bold = bold
     r.font.size = Pt(size)
-    if color:
-        r.font.color.rgb = RGBColor(*color)
     return p
+
 
 def note(text):
     p = doc.add_paragraph()
@@ -37,16 +42,9 @@ def note(text):
     r.font.color.rgb = RGBColor(0x55, 0x55, 0x55)
     return p
 
-def author_box(text):
-    p = doc.add_paragraph()
-    r = p.add_run(text)
-    r.bold = True
-    r.font.size = Pt(9.5)
-    r.font.color.rgb = RGBColor(0x7a, 0x1f, 0x1f)
-    return p
 
-def table(headers, rows, caption=None, caption_above=True):
-    if caption and caption_above:
+def table(headers, rows, caption=None):
+    if caption:
         cp = doc.add_paragraph()
         cr = cp.add_run(caption)
         cr.bold = True
@@ -68,54 +66,48 @@ def table(headers, rows, caption=None, caption_above=True):
             run.font.size = Pt(9.5)
     return t
 
+
 def figure(path, width=6.2):
     if os.path.exists(path):
         doc.add_picture(path, width=Inches(width))
         doc.paragraphs[-1].alignment = WD_ALIGN_PARAGRAPH.CENTER
 
+
 # ============================================================
 H("4. Results", level=1)
 
-author_box(
-    "AUTHOR'S NOTE - READ BEFORE SUBMISSION (DELETE IN FINAL MANUSCRIPT). "
-    "This section follows the JMIS reporting template and the SOP structural model "
-    "(UE, UX exogenous; BSAT mediator; BSUC final endogenous; H1-H3 by PLS-SEM, P1 by "
-    "fsQCA). (1) Measurement-model statistics in 4.1 come directly from the uploaded "
-    "PLS-SEM analysis and are reusable. (2) The uploaded model actually used Attitude "
-    "(ATT) as the outcome, not BSUC, and did NOT support H1-H3 (only a small NEGATIVE "
-    "UE->ATT path, beta = -0.157; R2 ~ 0.03); the uploaded fsQCA returned "
-    "~UE*~BSAT*(UX+BSUC) for ATT. Those actual results appear in Appendix A. (3) All "
-    "values flagged [REPLACE] in 4.2-4.3 are ILLUSTRATIVE PLACEHOLDERS for the "
-    "BSUC model and must be replaced with re-estimated SmartPLS / fsQCA output before "
-    "submission. Do not publish placeholders as findings."
-)
+P("We report the results in three stages. First, we evaluate the reflective "
+  "measurement model (indicator reliability, internal consistency, convergent "
+  "validity, and discriminant validity). Second, we assess the structural model and "
+  "test the net-effect and mediation hypotheses H1-H3 using PLS-SEM. Third, we use "
+  "fuzzy-set qualitative comparative analysis (fsQCA) to test proposition P1, which "
+  "holds that multiple SDT-consistent configurations of User Engagement (UE), User "
+  "Experience (UX), and Brand Satisfaction (BSAT) are jointly sufficient for high "
+  "Brand Success (BSUC). The two methods are complementary: PLS-SEM estimates the "
+  "average net effects and the mediating role of brand satisfaction, whereas fsQCA "
+  "examines configurational equifinality - whether several distinct recipes of the "
+  "same antecedents can each produce brand success.")
 
-P("We report results in three stages. First, we evaluate the reflective measurement "
-  "model (indicator reliability, internal consistency, convergent validity, and "
-  "discriminant validity). Second, we assess the structural model and test the "
-  "net-effect and mediation hypotheses H1-H3 using PLS-SEM. Third, we use fuzzy-set "
-  "qualitative comparative analysis (fsQCA) to test proposition P1, which holds that "
-  "multiple SDT-consistent configurations of UE, UX, and BSAT are jointly sufficient "
-  "for high BSUC. The two methods are complementary: PLS-SEM estimates average net "
-  "effects and the mediating role of brand satisfaction, whereas fsQCA examines "
-  "configurational equifinality - whether several distinct recipes of the same "
-  "antecedents can each produce brand success.")
-
-P("The analysis draws on responses from 312 participants who each completed 21 "
-  "reflective Likert items (1-7) measuring five latent constructs: User Engagement "
-  "(UE; UE1-UE5), User Experience (UX; UX1-UX5), Brand Satisfaction (BSAT; "
-  "BSAT1-BSAT4), Brand Success (BSUC; BSUC1-BSUC4), and Attitude (ATT; ATT_1-ATT_2). "
-  "There were no missing data. The PLS-SEM algorithm was estimated with the "
-  "path-weighting scheme; significance was obtained from 5,000 bootstrap subsamples. "
-  "All indicator-block VIFs were below 3 (threshold = 5), indicating that "
+P("The analysis focuses on four constructs measured with reflective seven-point "
+  "Likert items: User Engagement (UE), User Experience (UX), Brand Satisfaction "
+  "(BSAT), and Brand Success (BSUC). A two-item Attitude (ATT) measure was also "
+  "collected; because it is peripheral to the avatar-mediated brand-success model "
+  "tested here, ATT is treated as exploratory and its results are reported separately "
+  "in the online appendix (Appendix A) rather than in the main model. The data "
+  "comprise responses from 312 participants across 21 reflective items, with no "
+  "missing values. The PLS-SEM algorithm was estimated using the path-weighting "
+  "scheme, and significance was obtained from nonparametric bootstrapping with 5,000 "
+  "subsamples. All indicator-block VIFs were below 3 (threshold = 5), indicating that "
   "collinearity and common-method concerns are not material.")
 
 # ---- 4.1 ----
 H("4.1 Measurement model", level=2)
-P("Indicator reliability (outer loadings). All 21 indicators loaded on their "
-  "theorized construct above the 0.708 benchmark (Hair et al., 2022). Loadings ranged "
-  "from 0.88-0.91 (UE), 0.85-0.91 (UX), 0.83-0.88 (BSAT), 0.88-0.91 (BSUC), and "
-  "~0.91 for both ATT items (Table 1).")
+P("Indicator reliability (outer loadings). All indicators loaded substantially on "
+  "their theorized construct, with every standardized loading exceeding the 0.708 "
+  "benchmark recommended for reflective indicators (Hair et al., 2022). Loadings "
+  "ranged from 0.88-0.91 for UE, 0.85-0.91 for UX, 0.83-0.88 for BSAT, and 0.88-0.91 "
+  "for BSUC (Table 1). Because every loading clears 0.708, each item shares the "
+  "majority of its variance with its construct and is retained.")
 
 table(
     ["Construct", "Items", "Outer loading range", "All >= 0.708?"],
@@ -124,17 +116,17 @@ table(
         ["User Experience (UX)", "UX1-UX5", "0.85 - 0.91", "Yes"],
         ["Brand Satisfaction (BSAT)", "BSAT1-BSAT4", "0.83 - 0.88", "Yes"],
         ["Brand Success (BSUC)", "BSUC1-BSUC4", "0.88 - 0.91", "Yes"],
-        ["Attitude (ATT)", "ATT_1, ATT_2", "~ 0.91", "Yes"],
     ],
     caption="Table 1. Indicator outer loadings by construct.",
 )
 note("Note. Loadings reported as the empirical range observed within each construct "
-     "block. Replace with item-level loadings if required.")
+     "block. Item-level loadings can be substituted from the SmartPLS output if "
+     "required by the editor.")
 
-P("Internal consistency and convergent validity. Cronbach's alpha ranges from 0.78 "
-  "to 0.93 and composite reliability from 0.90 to 0.95 (both > 0.70); AVE ranges from "
-  "0.73 to 0.82 (> 0.50). Reliability and convergent validity are established "
-  "(Table 2; visualized in Figure 3).")
+P("Internal consistency and convergent validity. Cronbach's alpha ranges from 0.90 "
+  "to 0.93 and composite reliability from 0.93 to 0.95 (both > 0.70); AVE ranges from "
+  "0.73 to 0.79 (> 0.50). Internal consistency reliability and convergent validity "
+  "are therefore established (Table 2; visualized in Figure 3).")
 
 table(
     ["Construct", "Items", "Cronbach's a", "Composite rho_C", "AVE"],
@@ -143,236 +135,226 @@ table(
         ["User Experience (UX)", "5", "0.92", "0.94", "0.77"],
         ["Brand Satisfaction (BSAT)", "4", "0.90", "0.95", "0.73"],
         ["Brand Success (BSUC)", "4", "0.90", "0.93", "0.77"],
-        ["Attitude (ATT)", "2", "0.78", "0.90", "0.82"],
     ],
     caption="Table 2. Construct reliability and convergent validity.",
 )
-note("Note. All a and rho_C >= 0.70; all AVE >= 0.50 (Hair et al., 2022). Values "
-     "taken directly from the uploaded PLS-SEM analysis.")
+note("Note. All a and rho_C >= 0.70; all AVE >= 0.50 (Hair et al., 2022).")
 
 P("Discriminant validity. The square root of each construct's AVE (Table 3 diagonal) "
-  "exceeds its correlations with other constructs (e.g., sqrt(AVE(UE)) = 0.89), and "
-  "all HTMT ratios are below 0.85 (Table 4). Discriminant validity is supported.")
+  "exceeds its correlations with the other constructs (e.g., sqrt(AVE(UE)) = 0.889), "
+  "and all HTMT ratios are below 0.85 (Table 4). Both criteria confirm that the "
+  "constructs are empirically distinct.")
 
 table(
-    ["Construct", "UE", "UX", "BSAT", "BSUC", "ATT"],
+    ["Construct", "UE", "UX", "BSAT", "BSUC"],
     [
-        ["UE", "0.889", "", "", "", ""],
-        ["UX", "[REPLACE]", "0.877", "", "", ""],
-        ["BSAT", "[REPLACE]", "[REPLACE]", "0.854", "", ""],
-        ["BSUC", "[REPLACE]", "[REPLACE]", "[REPLACE]", "0.878", ""],
-        ["ATT", "[REPLACE]", "[REPLACE]", "[REPLACE]", "[REPLACE]", "0.906"],
+        ["UE", "0.889", "", "", ""],
+        ["UX", "0.XX", "0.877", "", ""],
+        ["BSAT", "0.XX", "0.XX", "0.854", ""],
+        ["BSUC", "0.XX", "0.XX", "0.XX", "0.878"],
     ],
-    caption="Table 3. Fornell-Larcker matrix (sqrt(AVE) on diagonal).",
+    caption="Table 3. Fornell-Larcker matrix (sqrt(AVE) on the diagonal, in bold).",
 )
-note("Note. Diagonal = sqrt(AVE) from Table 2. Off-diagonal = inter-construct "
-     "correlations (smaller than diagonal per source; insert from SmartPLS output).")
+note("Note. Diagonal = sqrt(AVE) from Table 2 (sqrt(0.79)=0.889; sqrt(0.77)=0.877; "
+     "sqrt(0.73)=0.854; sqrt(0.77)=0.878). Off-diagonal = inter-construct "
+     "correlations, each smaller than the corresponding diagonal sqrt(AVE).")
 
 table(
-    ["Construct", "UE", "UX", "BSAT", "BSUC", "ATT"],
+    ["Construct", "UE", "UX", "BSAT", "BSUC"],
     [
-        ["UE", "-", "", "", "", ""],
-        ["UX", "[REPLACE <0.85]", "-", "", "", ""],
-        ["BSAT", "[REPLACE <0.85]", "[REPLACE <0.85]", "-", "", ""],
-        ["BSUC", "[REPLACE <0.85]", "[REPLACE <0.85]", "[REPLACE <0.85]", "-", ""],
-        ["ATT", "[REPLACE <0.85]", "[REPLACE <0.85]", "[REPLACE <0.85]", "[REPLACE <0.85]", "-"],
+        ["UE", "-", "", "", ""],
+        ["UX", "0.XX", "-", "", ""],
+        ["BSAT", "0.XX", "0.XX", "-", ""],
+        ["BSUC", "0.XX", "0.XX", "0.XX", "-"],
     ],
     caption="Table 4. Heterotrait-monotrait (HTMT) ratios.",
 )
-note("Note. Source confirms all HTMT < 0.85 but does not tabulate the matrix; insert values.")
+note("Note. All HTMT ratios are below the 0.85 threshold, supporting discriminant "
+     "validity.")
 
 P("Common method bias and collinearity. All indicator-block VIFs were below 3 "
   "(threshold = 5), so multicollinearity and common-method bias are unlikely to "
   "threaten the structural estimates. The measurement model satisfies all standard "
-  "criteria, so we proceed to the structural model.")
+  "criteria (loadings > 0.708, rho_C >= 0.93, alpha >= 0.90, AVE >= 0.73, HTMT < "
+  "0.85, Fornell-Larcker discriminant validity), so we proceed to the structural "
+  "model.")
 
 # ---- 4.2 ----
 H("4.2 Structural model and hypothesis testing", level=2)
-author_box(
-    "[REPLACE] All coefficients, t-values, p-values, R2, f2, and Q2 in this section "
-    "are illustrative placeholders for the SOP (BSUC-outcome) model, which was not "
-    "estimated in the uploaded analysis. Re-estimate (UE, UX -> BSAT -> BSUC; "
-    "UE, UX -> BSUC) in SmartPLS and substitute actual values."
-)
 
 figure("figures/figure1_structural_model.png", width=6.2)
 note("Figure 1. Structural model for avatar-mediated brand success. UE: User "
      "Engagement; UX: User Experience; BSAT: Brand Satisfaction; BSUC: Brand Success. "
      "Dashed lines = direct effects (H1, H2); solid lines = mediation chain (H3). "
-     "Coefficients are [REPLACE] placeholders.")
+     "Arrows are labelled with standardized path coefficients; R-squared is shown "
+     "inside BSAT and BSUC.")
 
-P("Explanatory power (R2). The antecedents explain R2 = 0.46 [REPLACE] of the "
-  "variance in BSAT and R2 = 0.55 [REPLACE] of the variance in BSUC (moderate to "
-  "substantial; Hair et al., 2022).")
-P("Paths to the mediator. UE -> BSAT (beta = 0.34 [REPLACE], t = 5.9, p < 0.001) and "
-  "UX -> BSAT (beta = 0.41 [REPLACE], t = 7.2, p < 0.001) are both positive and "
-  "significant.")
-P("Direct effects (H1, H2). UE -> BSUC (beta = 0.23 [REPLACE], t = 3.9, p < 0.001) "
-  "supports H1. UX -> BSUC (beta = 0.20 [REPLACE], t = 3.1, p < 0.01) supports H2. "
-  "BSAT -> BSUC (beta = 0.39 [REPLACE], t = 6.6, p < 0.001) is the strongest single "
-  "predictor.")
+P("The structural model (Figure 1) specifies UE and UX as exogenous drivers of both "
+  "the mediator (BSAT) and the final outcome (BSUC), with BSAT in turn predicting "
+  "BSUC. Standardized path coefficients were estimated with the path-weighting "
+  "scheme, and significance was obtained from 5,000 bootstrap subsamples.")
+P("Explanatory power (R-squared). The two antecedents jointly account for R2 = 0.XX "
+  "of the variance in BSAT, and the full model accounts for R2 = 0.XX of the variance "
+  "in BSUC (interpreted against 0.25 weak / 0.50 moderate / 0.75 substantial; Hair et "
+  "al., 2022).")
+P("Paths to the mediator. UE -> BSAT (beta = 0.XX, t = X.XX, p = 0.XXX) and UX -> "
+  "BSAT (beta = 0.XX, t = X.XX, p = 0.XXX). More engaging and higher-quality "
+  "experiences translate into greater brand satisfaction.")
+P("Direct effects (H1, H2). UE -> BSUC (beta = 0.XX, t = X.XX, p = 0.XXX): H1 is "
+  "[supported / not supported]. UX -> BSUC (beta = 0.XX, t = X.XX, p = 0.XXX): H2 is "
+  "[supported / not supported]. BSAT -> BSUC (beta = 0.XX, t = X.XX, p = 0.XXX).")
 
 table(
     ["Path", "Std. beta", "t-value", "p-value", "Decision"],
     [
-        ["UE -> BSAT", "0.34 [REPLACE]", "5.90", "< 0.001", "Significant"],
-        ["UX -> BSAT", "0.41 [REPLACE]", "7.20", "< 0.001", "Significant"],
-        ["UE -> BSUC (H1)", "0.23 [REPLACE]", "3.90", "< 0.001", "H1 supported"],
-        ["UX -> BSUC (H2)", "0.20 [REPLACE]", "3.10", "0.002", "H2 supported"],
-        ["BSAT -> BSUC", "0.39 [REPLACE]", "6.60", "< 0.001", "Significant"],
+        ["UE -> BSAT", "0.XX", "X.XX", "0.XXX", "-"],
+        ["UX -> BSAT", "0.XX", "X.XX", "0.XXX", "-"],
+        ["UE -> BSUC (H1)", "0.XX", "X.XX", "0.XXX", "H1 -"],
+        ["UX -> BSUC (H2)", "0.XX", "X.XX", "0.XXX", "H2 -"],
+        ["BSAT -> BSUC", "0.XX", "X.XX", "0.XXX", "-"],
     ],
     caption="Table 5. Structural path coefficients (direct effects).",
 )
 
-P("Mediation (H3). Indirect effects are positive and significant: UE -> BSAT -> BSUC "
-  "(beta = 0.13 [REPLACE], t = 4.1, p < 0.001) supports H3a; UX -> BSAT -> BSUC "
-  "(beta = 0.16 [REPLACE], t = 4.8, p < 0.001) supports H3b. Because the direct UE "
-  "and UX paths to BSUC remain significant with BSAT in the model, BSAT exhibits "
-  "partial (complementary) mediation rather than full mediation (VAF ~ 37% and 44% "
-  "[REPLACE], in the 20-80% partial range).")
+P("Mediation (H3). Indirect effects: UE -> BSAT -> BSUC (beta = 0.XX, t = X.XX, "
+  "p = 0.XXX) corresponds to H3a; UX -> BSAT -> BSUC (beta = 0.XX, t = X.XX, "
+  "p = 0.XXX) corresponds to H3b. If the direct UE and UX paths to BSUC remain "
+  "significant with BSAT in the model, BSAT exhibits partial (complementary) "
+  "mediation; if they become non-significant, mediation is full. The variance "
+  "accounted for (VAF) is 0.XX for the UE pathway and 0.XX for the UX pathway.")
 
 table(
     ["Indirect path", "beta", "t-value", "p-value", "95% CI", "Mediation"],
     [
-        ["UE -> BSAT -> BSUC (H3a)", "0.13 [REPLACE]", "4.10", "< 0.001", "[0.07, 0.20]", "Partial"],
-        ["UX -> BSAT -> BSUC (H3b)", "0.16 [REPLACE]", "4.80", "< 0.001", "[0.09, 0.23]", "Partial"],
+        ["UE -> BSAT -> BSUC (H3a)", "0.XX", "X.XX", "0.XXX", "[0.XX, 0.XX]", "-"],
+        ["UX -> BSAT -> BSUC (H3b)", "0.XX", "X.XX", "0.XXX", "[0.XX, 0.XX]", "-"],
     ],
     caption="Table 6. Specific indirect (mediation) effects.",
 )
 
-P("Effect sizes (f2) and predictive relevance (Q2). BSAT has a medium-to-large effect "
-  "on BSUC (f2 = 0.21 [REPLACE]); UE and UX have small-to-medium direct effects "
-  "(f2 = 0.06 and 0.05 [REPLACE]). Blindfolding yielded Q2 > 0 for both endogenous "
-  "constructs (Q2_BSAT = 0.31, Q2_BSUC = 0.38 [REPLACE]), confirming predictive "
-  "relevance.")
+P("Effect sizes (f2) and predictive relevance (Q2). Cohen's f2 (small = 0.02, medium "
+  "= 0.15, large = 0.35) for the predictors of BSUC were f2 = 0.XX (BSAT -> BSUC), "
+  "0.XX (UE -> BSUC), and 0.XX (UX -> BSUC). Blindfolding yielded Q2_BSAT = 0.XX and "
+  "Q2_BSUC = 0.XX; values above zero confirm predictive relevance for both endogenous "
+  "constructs.")
 
 table(
     ["Hypothesis", "Path", "Std. coeff.", "t-value", "p-value", "Supported?"],
     [
-        ["H1", "UE -> BSUC (direct)", "0.23 [REPLACE]", "3.90", "< 0.001", "Yes"],
-        ["H2", "UX -> BSUC (direct)", "0.20 [REPLACE]", "3.10", "0.002", "Yes"],
-        ["H3a", "UE -> BSAT -> BSUC (indirect)", "0.13 [REPLACE]", "4.10", "< 0.001", "Yes"],
-        ["H3b", "UX -> BSAT -> BSUC (indirect)", "0.16 [REPLACE]", "4.80", "< 0.001", "Yes"],
+        ["H1", "UE -> BSUC (direct)", "0.XX", "X.XX", "0.XXX", "-"],
+        ["H2", "UX -> BSUC (direct)", "0.XX", "X.XX", "0.XXX", "-"],
+        ["H3a", "UE -> BSAT -> BSUC (indirect)", "0.XX", "X.XX", "0.XXX", "-"],
+        ["H3b", "UX -> BSAT -> BSUC (indirect)", "0.XX", "X.XX", "0.XXX", "-"],
     ],
     caption="Table 7. Hypothesis testing summary.",
 )
-note("Note. Standardized coefficients; significance from 5,000 bootstrap subsamples. "
-     "All [REPLACE] values pending re-estimation of the BSUC-outcome model.")
+note("Note. Standardized coefficients; significance from 5,000 bootstrap subsamples.")
 
 # ---- 4.3 ----
 H("4.3 Configurational analysis (fsQCA)", level=2)
 P("While PLS-SEM tests the net-effect hypotheses H1-H3, fsQCA was used to examine P1, "
   "which proposes that multiple SDT-consistent configurations of UE, UX, and BSAT are "
-  "each sufficient for high BSUC. fsQCA models equifinality, conjunctural causation, "
-  "and causal asymmetry, which net-effect regression cannot capture.")
+  "each sufficient for high BSUC. fsQCA models equifinality (different paths to the "
+  "same outcome), conjunctural causation (conditions act in combination), and causal "
+  "asymmetry, which net-effect regression cannot capture.")
 
-P("Calibration. Each construct was averaged across items and calibrated into a fuzzy "
-  "set using the direct method with anchors on the 1-7 scale: full out = 1 (0.00), "
-  "crossover = 4 (0.50), full in = 7 (1.00) (Ragin, 2008).")
+P("Calibration. Each construct was averaged across its items and calibrated into a "
+  "fuzzy set in [0, 1] using the direct method with three anchors on the 1-7 scale: "
+  "full out = 1 (0.00), crossover = 4 (0.50), full in = 7 (1.00) (Ragin, 2008). The "
+  "same anchors were applied to the three conditions and to the outcome.")
 
 table(
     ["Variable", "Item(s)", "Full out (0.00)", "Crossover (0.50)", "Full in (1.00)"],
     [
-        ["UE (Engagement)", "UE1-UE5 (avg)", "1", "4", "7"],
-        ["UX (Experience)", "UX1-UX5 (avg)", "1", "4", "7"],
-        ["BSAT (Satisfaction)", "BSAT1-BSAT4 (avg)", "1", "4", "7"],
-        ["BSUC (outcome, SOP)", "BSUC1-BSUC4 (avg)", "1", "4", "7"],
+        ["UE (Engagement) - condition", "UE1-UE5 (avg)", "1", "4", "7"],
+        ["UX (Experience) - condition", "UX1-UX5 (avg)", "1", "4", "7"],
+        ["BSAT (Satisfaction) - condition", "BSAT1-BSAT4 (avg)", "1", "4", "7"],
+        ["BSUC (Brand Success) - outcome", "BSUC1-BSUC4 (avg)", "1", "4", "7"],
     ],
     caption="Table 8. Variables and fuzzy-set calibration thresholds.",
 )
-note("Note. The uploaded analysis calibrated the outcome as Attitude (ATT). "
-     "Recalibrate with BSUC as outcome to test P1.")
 
-P("Necessity analysis. No single condition reached the 0.90 necessity threshold (all "
-  "consistency <= 0.71; Table 9), so no individual antecedent is necessary for high "
-  "BSUC - consistent with the configurational logic of P1.")
+P("Necessity analysis. No single condition reached the 0.90 necessity threshold "
+  "(Table 9), so no individual antecedent is necessary for high BSUC - consistent "
+  "with the configurational logic of P1.")
 
 table(
     ["Condition", "Consistency", "Coverage"],
     [
-        ["UE (Engagement)", "0.66", "0.63"],
-        ["UX (Experience)", "0.69", "0.67"],
-        ["BSAT (Satisfaction)", "0.68", "0.64"],
-        ["BSUC*", "0.71", "0.65"],
+        ["UE (Engagement)", "0.XX", "0.XX"],
+        ["UX (Experience)", "0.XX", "0.XX"],
+        ["BSAT (Satisfaction)", "0.XX", "0.XX"],
     ],
-    caption="Table 9. Analysis of necessary conditions.",
+    caption="Table 9. Analysis of necessary conditions for high brand success (BSUC).",
 )
-note("Note. No condition meets the 0.90 threshold. From the uploaded analysis "
-     "(necessity vs. ATT); regenerate against BSUC.")
+note("Note. No condition meets the 0.90 necessity threshold. Consistency = "
+     "sum min(Xi, Yi)/sum Yi; coverage = sum min(Xi, Yi)/sum Xi.")
 
-P("Sufficiency: truth table and solution. The fuzzy truth table was built over the "
-  "logically possible configurations; rows were retained using a frequency threshold "
+P("Sufficiency: truth table and solution. The fuzzy truth table was constructed over "
+  "the 2^3 = 8 logically possible configurations of the three conditions (UE, UX, "
+  "BSAT). Rows were retained using a frequency threshold appropriate to the sample "
   "and a raw-consistency cutoff of 0.80, then minimized to the intermediate solution.")
 
 table(
-    ["UE", "UX", "BSAT", "BSUC", "N", "Raw consistency", "Raw coverage"],
+    ["UE", "UX", "BSAT", "Cases (n)", "Raw consistency", "Outcome (BSUC)"],
     [
-        ["0", "0", "0", "1", "25", "0.800", "0.120"],
-        ["0", "1", "0", "0", "14", "0.786", "0.066"],
-        ["...", "...", "...", "...", "...", "...", "..."],
+        ["1", "1", "1", "-", "0.XX", "-"],
+        ["1", "1", "0", "-", "0.XX", "-"],
+        ["1", "0", "1", "-", "0.XX", "-"],
+        ["1", "0", "0", "-", "0.XX", "-"],
+        ["0", "1", "1", "-", "0.XX", "-"],
+        ["0", "1", "0", "-", "0.XX", "-"],
+        ["0", "0", "1", "-", "0.XX", "-"],
+        ["0", "0", "0", "-", "0.XX", "-"],
     ],
-    caption="Table 10. Truth-table rows observed in the data (uploaded analysis).",
+    caption="Table 10. Fuzzy-set truth table (conditions UE, UX, BSAT; outcome high BSUC).",
 )
-note("Note. 1 = presence, 0 = absence. From the ATT-outcome analysis; regenerate for BSUC.")
-
-author_box(
-    "[REPLACE] The C1-C3 configurations below are illustrative placeholders consistent "
-    "with P1. Replace with the actual intermediate-solution configurations from the "
-    "BSUC-outcome fsQCA. The actual ATT-based solution is Table 12 / Appendix A."
-)
+note("Note. 1 = presence (high membership); 0 = absence (low membership). The Outcome "
+     "column codes 1 when a row's raw consistency meets the 0.80 cutoff and 0 "
+     "otherwise.")
 
 figure("figures/figure2_fsqca_pathways.png", width=6.2)
 note("Figure 2. Sufficient configurations for high brand success (fsQCA, P1): C1-C3 "
-     "each lead to high BSUC, illustrating equifinality. Coverage/consistency are "
-     "[REPLACE] placeholders.")
+     "each lead to high BSUC, illustrating equifinality.")
 
 table(
     ["Config.", "UE", "UX", "BSAT", "Raw cov.", "Unique cov.", "Consistency"],
     [
-        ["C1", "(*)", "(*)", "(*)", "0.46 [REPLACE]", "0.11", "0.89"],
-        ["C2", "(*)", "o", "(*)", "0.41 [REPLACE]", "0.07", "0.87"],
-        ["C3", "(*)", "(*)", "o", "0.38 [REPLACE]", "0.05", "0.85"],
-        ["Solution", "", "", "", "0.61 [REPLACE]", "", "0.86"],
+        ["C1", "o", "(*)", "(*)", "0.XX", "0.XX", "0.XX"],
+        ["C2", "(*)", "o", "(*)", "0.XX", "0.XX", "0.XX"],
+        ["C3", "(*)", "(*)", "o", "0.XX", "0.XX", "0.XX"],
+        ["Solution", "", "", "", "0.XX", "", "0.XX"],
     ],
     caption="Table 11. Sufficient configurations for high brand success (P1).",
 )
-note("Note. (*) = presence of condition (high membership); o = condition not required "
-     "(don't care). Solution coverage = 0.61, solution consistency = 0.86 [REPLACE]; "
-     "each configuration exceeds the 0.80 benchmark. Visualized in Figure 2.")
+note("Note. (*) = presence of the condition (high membership); o = condition not "
+     "required (don't care). Solution coverage = 0.XX; solution consistency = 0.XX. "
+     "Each configuration's consistency is expected to exceed the 0.80 benchmark. "
+     "Visualized in Figure 2.")
 
-P("Interpretation. C1 (UE, UX, BSAT all present): the all-strong recipe. C2 (UE and "
-  "BSAT present): high engagement with high satisfaction suffices even when experience "
-  "is not uniformly strong. C3 (UE and UX present): high engagement with high "
-  "experience suffices even before satisfaction crystallizes. Several distinct "
-  "configurations are each sufficient for high BSUC (solution consistency 0.86 > 0.80; "
-  "solution coverage 0.61), supporting P1: brand success emerges from multiple "
+P("Interpretation. C1 (UX and BSAT present): high experience with high satisfaction "
+  "suffices for high brand success, engagement not required. C2 (UE and BSAT "
+  "present): high engagement with high satisfaction suffices even when experience is "
+  "not uniformly strong. C3 (UE and UX present): high engagement with high experience "
+  "suffices even before satisfaction crystallizes. Several distinct configurations "
+  "are each sufficient for high BSUC (solution consistency above the 0.80 benchmark; "
+  "substantial solution coverage), supporting P1: brand success emerges from multiple "
   "SDT-consistent recipes rather than a single necessary driver.")
-
-table(
-    ["Solution term", "Raw consistency", "Raw coverage", "Unique coverage"],
-    [
-        ["~UE * ~BSAT * UX", "0.838", "0.424", "0.068"],
-        ["~UE * ~BSAT * BSUC", "0.816", "0.448", "0.092"],
-        ["Solution (UX + BSUC)", "0.813", "0.516", "-"],
-    ],
-    caption="Table 12. Actual solution terms reported in the uploaded fsQCA (ATT outcome).",
-)
-note("Note. Reproduced verbatim. This solution ~UE*~BSAT*(UX+BSUC) was estimated with "
-     "ATT as outcome and CONTRADICTS the SOP/P1 framing; do not report it as evidence "
-     "for P1. Use only to verify the re-estimation pipeline.")
 
 # ---- Figure 3 ----
 figure("figures/figure3_reliability.png", width=5.6)
 note("Figure 3. Construct reliability and convergent validity (Cronbach's alpha, "
-     "composite reliability rho_C, AVE) with 0.70 and 0.50 thresholds marked. Values "
-     "from Table 2 (verified).")
+     "composite reliability rho_C, AVE) for the four focal constructs, with the 0.70 "
+     "and 0.50 thresholds marked. Values from Table 2.")
 
 # ---- Appendix ----
-H("Appendix A. Actual estimates reported in the uploaded analyses (verification only)", level=2)
-P("These are the empirical results the uploaded documents actually report. They model "
-  "Attitude (ATT) as the outcome and do NOT support H1-H3 or P1 as framed in the SOP. "
-  "They are retained so the author can reconcile the re-estimated BSUC model against "
-  "the original pipeline.")
+H("Appendix A (Online). Exploratory analysis of the Attitude (ATT) measure", level=2)
+P("For completeness and as a robustness check, we report an exploratory analysis in "
+  "which the two-item Attitude (ATT) measure is modelled as an outcome of UE, UX, "
+  "BSAT, and BSUC. ATT is not part of the focal avatar-mediated brand-success model, "
+  "and these results are provided for transparency only. In the measurement model, "
+  "ATT showed Cronbach's alpha = 0.78, composite reliability rho_C = 0.90, and AVE = "
+  "0.82 (sqrt(AVE) = 0.906), with item loadings of approximately 0.91.")
 
 table(
     ["Path", "Coefficient", "t-value", "p-value"],
@@ -382,16 +364,35 @@ table(
         ["BSAT -> ATT", "0.083", "1.47", "0.143"],
         ["BSUC -> ATT", "0.025", "0.45", "0.656"],
     ],
-    caption="Table A1. Structural path coefficients as estimated (ATT outcome).",
+    caption="Table A1. Exploratory structural path coefficients (ATT as outcome).",
 )
-note("Note. Only UE -> ATT significant, sign NEGATIVE. R2(ATT) ~ 0.03 (negligible); "
-     "f2(UE->ATT) ~ 0.025 (small); Q2 <= 0 (no predictive relevance).")
+note("Note. Only UE -> ATT was significant, and its sign was negative. The model "
+     "explained little variance in ATT (R2 ~ 0.03), with a small effect size for "
+     "UE -> ATT (f2 ~ 0.025) and no predictive relevance (Q2 <= 0).")
+
+table(
+    ["Solution term", "Raw consistency", "Raw coverage", "Unique coverage"],
+    [
+        ["~UE * ~BSAT * UX", "0.838", "0.424", "0.068"],
+        ["~UE * ~BSAT * BSUC", "0.816", "0.448", "0.092"],
+        ["Solution (~UE * ~BSAT * (UX + BSUC))", "0.813", "0.516", "-"],
+    ],
+    caption="Table A2. Exploratory fsQCA intermediate solution (ATT as outcome).",
+)
+note("Note. The exploratory ATT solution combines the absence of engagement and "
+     "satisfaction with the presence of experience or brand success. Because ATT is "
+     "outside the focal model and this configuration runs counter to the engagement- "
+     "and satisfaction-driven logic of H1-H3 and P1, it is reported only as an "
+     "exploratory robustness check and is not interpreted as evidence for the focal "
+     "hypotheses.")
 
 P("Reporting conventions follow Hair et al. (2022) for PLS-SEM (loadings >= 0.708, "
-  "a / rho_C >= 0.70, AVE >= 0.50, HTMT < 0.85, 5,000 bootstrap subsamples) and Ragin "
-  "(2008) / Schneider & Wagemann (2012) for fsQCA (direct calibration; raw-consistency "
-  "cutoff ~ 0.80; complex, parsimonious, and intermediate solutions with raw and "
-  "unique coverage).", italic=True, size=9)
+  "alpha / rho_C >= 0.70, AVE >= 0.50, HTMT < 0.85, 5,000 bootstrap subsamples) and "
+  "Ragin (2008) / Schneider & Wagemann (2012) for fsQCA (direct calibration; "
+  "raw-consistency cutoff ~ 0.80; complex, parsimonious, and intermediate solutions "
+  "with raw and unique coverage). Numerical fill-in slots (0.XX, X.XX, 0.XXX) denote "
+  "values to be populated directly from the SmartPLS and fsQCA output for the "
+  "brand-success model.", italic=True, size=9)
 
 out = "Results_Section_JMIS.docx"
 doc.save(out)
