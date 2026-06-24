@@ -1,0 +1,8 @@
+Combination,n_conditions,Raw_consistency,PRI_consistency,Raw_coverage
+UE * UX * BSAT,3,0.857,0.737,0.497
+UE * BSAT,2,0.839,0.725,0.573
+UX * BSAT,2,0.829,0.714,0.604
+BSAT,1,0.776,0.661,0.751
+UE * UX,2,0.774,0.62,0.566
+UX,1,0.714,0.568,0.718
+UE,1,0.685,0.53,0.698

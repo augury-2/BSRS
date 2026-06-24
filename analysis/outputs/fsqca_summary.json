@@ -1,0 +1,24 @@
+{
+  "frequency_cutoff": 4,
+  "consistency_cutoff": 0.8,
+  "PRI_cutoff": 0.7,
+  "complex": {
+    "coverage": 0.497,
+    "consistency": 0.857,
+    "n_configs": 1
+  },
+  "parsimonious": {
+    "coverage": 0.497,
+    "consistency": 0.857,
+    "n_configs": 1
+  },
+  "intermediate": {
+    "coverage": 0.497,
+    "consistency": 0.857,
+    "n_configs": 1
+  },
+  "negated_outcome": {
+    "coverage": 0.492,
+    "consistency": 0.861
+  }
+}

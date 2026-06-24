@@ -1,0 +1,12 @@
+# Python 3.11 — analysis dependencies for BSRS PLS-SEM + fsQCA
+# Note: factor_analyzer requires scikit-learn<1.6 (force_all_finite kwarg).
+pandas
+numpy
+scipy
+openpyxl
+matplotlib
+seaborn
+statsmodels
+factor_analyzer
+plspm
+scikit-learn<1.6
