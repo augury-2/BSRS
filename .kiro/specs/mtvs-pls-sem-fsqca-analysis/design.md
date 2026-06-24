@@ -8,7 +8,8 @@ This document specifies the technical design for a complete, reproducible, publi
 
 - `MTVS.xlsx` contains exactly the columns `S.No`, `ID`, the 20 substantive indicators (UE1–UE5, UX1–UX5, BSAT1–BSAT4, BSUC1–BSUC4), and the controls `ATT_1`, `ATT_2`. **There are NO per-respondent demographic columns** (no Gender, Age band, Marital Status, Occupation, Metaverse Engagement Frequency, NFT Interaction, Virtual Event Participation, Social Interaction/Content Creation, or Monthly Family Income fields).
 - Demographic information is supplied **only as aggregate Respondent Demographic Profile (Table 1, N = 312) category counts and percentages**, not as per-respondent values. Aggregate counts cannot assign individual respondents to groups.
-- **Data dependency for Multi-Group Analysis:** per-respondent demographic values must be **merged into the analysis dataset on the `ID` case label** before Multi-Group Analysis (PART G) can run. Multi-Group Analysis is an **active, required analysis** (Requirement 12) gated on this explicit data dependency (Requirement 2). The `Data_Loader` detects and validates the nine demographic grouping columns and records their absence gracefully (Requirement 1.10–1.12).
+- **Per-respondent demographics are confidential and unavailable by design.** Respondents were given a confidentiality assurance, and per-respondent demographic values will **not** be released or merged into the analysis dataset. Only the published aggregate category counts (Respondent Demographic Profile, Table 1) are available.
+- **Multi-Group Analysis (PART G) is NOT ESTIMABLE for this dataset.** Because individual respondents cannot be assigned to demographic groups, hypothesis **H4 (demographic moderation) is not testable** with the available data; Multi-Group Analysis is reported as **not estimable** (Requirement 12) and is described descriptively only. Table 1 is produced from the published aggregate counts (Requirement 6). The ID-keyed merge + MICOM + permutation/PLS-MGA procedure is retained solely as an **optional, conditional path** that would apply only if non-confidential per-respondent demographic data ever became available internally (Requirement 2); the `Data_Loader` continues to detect demographic columns and record their absence gracefully (Requirement 1.10–1.12).
 
 The design realizes the 26 requirements in `requirements.md`. It commits to a concrete implementation stack, defines every statistical procedure with thresholds and citations, fixes a single source-of-truth results store to guarantee internal consistency, and enumerates executable correctness properties suitable for property-based testing.
 
@@ -18,7 +19,7 @@ The design realizes the 26 requirements in `requirements.md`. It commits to a co
 2. **Internal-consistency enforcement.** A single immutable `ResultsStore` holds every statistic. Any artifact (table, figure caption, decision table, narrative) reads from the store; the same statistic is rendered identically everywhere. A consistency gate halts the build if any duplicated statistic disagrees (Req 24.2, 24.3, 16.3).
 3. **APA-publication output.** Tables are APA 7th-edition formatted; figures render at >= 300 DPI raster or vector; numbers use consistent 2–3 decimal precision (Req 19, 20).
 4. **Method rigor with traceable thresholds.** Every threshold-based decision records the observed value and the applied threshold with a methodological citation (Req 24.1, 24.4).
-5. **Data-dependency gating with honest reporting.** Components whose preconditions are absent record their state explicitly rather than fabricate output. Multi-Group Analysis is an **active, required analysis** that consumes per-respondent demographics merged on `ID`; when those values are absent it is reported as **blocked by an unmet data dependency** naming the required Grouping_Variables (Req 2.5, 12.1).
+5. **Honest reporting under confidential demographics.** Components whose preconditions are absent record their state explicitly rather than fabricate output. Per-respondent demographic values are **confidential and unavailable by design**, so Multi-Group Analysis is reported as **NOT ESTIMABLE** for this dataset and hypothesis H4 is recorded as not testable (Req 2.4, 12.1). Table 1 is produced from the published aggregate counts only (Req 6.1). The ID-keyed merge + MICOM/PLS-MGA procedure is retained only as a clearly-marked **conditional path** that would apply if non-confidential per-respondent demographic data ever became available internally (Req 2.5).
 
 ### Implementation Stack Decision
 
@@ -55,9 +56,9 @@ graph TD
     SE --> MED[Mediation_Analyzer<br/>Req 7]
     SE --> QA[Quality_Assessor<br/>Req 8]
     SE --> IPMA[IPMA_Module<br/>Req 9]
-    DL --> DM["Demographic merge on ID<br/>Req 2"]
-    DM --> MGA["MGA_Module active<br/>Req 12"]
-    DM --> TBL1["Table 1 profile<br/>Req 6"]
+    DL --> DM["Demographic merge on ID<br/>(conditional path only)<br/>Req 2.5"]
+    DM -.->|conditional| MGA["MGA_Module<br/>NOT ESTIMABLE (confidential demographics);<br/>conditional MICOM/PLS-MGA path retained<br/>Req 12"]
+    AGG[("Published aggregate<br/>category counts")] --> TBL1["Table 1 profile<br/>from aggregate counts<br/>Req 6"]
     CB --> FSQCA[FSQCA_Module<br/>Req 11-15,17]
     FSQCA --> ROB[Robustness_Module<br/>Req 18]
     SCR --> RS[(ResultsStore<br/>single source of truth)]
@@ -87,7 +88,7 @@ graph TD
 5. **Measurement model** — `Measurement_Evaluator` fits the reflective model: loadings, weights, reliability, AVE, Fornell-Larcker, HTMT, full-collinearity VIF, CMB, model fit.
 6. **Structural model** — `Structural_Estimator` estimates standardized paths and runs the 5000-resample BCa bootstrap.
 7. **Mediation / quality / IPMA** — derived from the bootstrapped structural model.
-8. **Demographic merge & MGA (active, data-gated)** — when per-respondent demographics are merged on `ID` (preserving 312 rows), `MGA_Module` runs MICOM and PLS-MGA across all nine Grouping_Variables and `Reporting_Module` emits the Respondent Demographic Profile (Table 1); when demographics are absent, MGA is reported as blocked by the unmet data dependency (Req 2.5, 12.1).
+8. **Demographic reporting & MGA (not estimable)** — per-respondent demographics are confidential and unavailable by design, so `MGA_Module` reports Multi-Group Analysis as **NOT ESTIMABLE** and records H4 as not testable (Req 2.4, 12.1), and `Reporting_Module` emits the Respondent Demographic Profile (Table 1) from the published aggregate counts (Req 6.1). The ID-keyed merge + MICOM/PLS-MGA across the nine Grouping_Variables (preserving 312 rows) is retained only as a conditional path that would run if non-confidential per-respondent demographics became available internally (Req 2.5).
 9. **fsQCA** — `FSQCA_Module` calibrates, runs necessity, builds the truth table, minimizes, and reports configurations + plots.
 10. **Robustness** — `Robustness_Module` re-runs fsQCA under alternative analytic choices.
 11. **Consistency gate** — verifies duplicated statistics agree; halts on conflict.
@@ -97,7 +98,7 @@ graph TD
 
 | Module | Requirements | Primary outputs |
 |---|---|---|
-| Data_Loader | 1 | `analysis_df`, structural-validation report, demographic-column detection & validation (Req 1.10–1.12), ID-keyed demographic merge (Req 2.3–2.4) |
+| Data_Loader | 1 | `analysis_df`, structural-validation report, demographic-column detection & validation (Req 1.10–1.12), confidentiality-status record + MGA-not-estimable report (Req 2.2–2.4); conditional ID-keyed demographic merge (Req 2.5) |
 | Run_Manifest builder | 2 | `Run_Manifest` |
 | Composite_Builder | 3 | composite scores + descriptives |
 | Screening_Module | 4 | screening report, diagnostic figures/tables |
@@ -106,10 +107,10 @@ graph TD
 | Mediation_Analyzer | 7 | indirect/direct/total effects, VAF, mediation type |
 | Quality_Assessor | 8 | R²/f²/Q²/PLSpredict |
 | IPMA_Module | 9 | importance-performance map + table |
-| MGA_Module | 12 (data-gated on 2) | **active** Multi-Group Analysis over merged demographics: MICOM, permutation + PLS-MGA per path, subgroup adequacy, APA multi-group results table; or a blocked-dependency record naming the Grouping_Variables when demographics are absent |
+| MGA_Module | 12 (not estimable for this dataset) | Multi-Group Analysis reported **NOT ESTIMABLE** (confidential demographics): records H4 as not testable and names the required Grouping_Variables (Req 2.4, 12.1, 12.2). **Conditional MICOM/PLS-MGA path retained** — where non-confidential per-respondent demographics become available internally, runs MICOM, permutation + PLS-MGA per path, subgroup adequacy, and an APA multi-group results table (Req 12.3–12.9) |
 | FSQCA_Module | 11–15, 17 | calibration, necessity, truth table, solutions, plots |
 | Robustness_Module | 18 | robustness comparison |
-| Reporting_Module | 16, 19–24 (+ Table 1: Req 6) | APA tables, figures, narrative, appendix, consistency gate, Respondent Demographic Profile (Table 1) |
+| Reporting_Module | 16, 19–24 (+ Table 1: Req 6) | APA tables, figures, narrative, appendix, consistency gate, Respondent Demographic Profile (Table 1) from published aggregate counts with confidential/MGA-not-estimable annotation |
 
 ## Components and Interfaces
 
@@ -125,20 +126,24 @@ Procedure:
 - For each substantive indicator, count values outside the closed interval [1, 7] and non-integers; report counts per indicator (Req 1.5). Out-of-range values are recorded (indicator, `ID`, value) and processing continues (Req 1.6). If zero out-of-range values, the out-of-range report is **skipped, not emitted empty** (Req 1.7).
 - Report observed row count and whether it equals 312 (Req 1.8).
 - Drop `S.No` and `ID` from all statistical inputs; retain `ID` as a case label vector (Req 1.9).
-- **Demographic-column detection (Req 1.10–1.12).** Detect whether the nine per-respondent demographic grouping columns — Gender, Age band, Marital Status, Occupation, Metaverse Engagement Frequency, NFT Interaction, Virtual Event Participation, Social Interaction/Content Creation, and Monthly Family Income — are present. Where present, report each variable's observed category count and percentage and compare every category frequency against the expected Respondent Demographic Profile (Table 1; N = 312), flagging any deviation (Req 1.11). Where one or more demographic columns are absent, record that per-respondent demographic data is unavailable, flag the Multi-Group Analysis data dependency (Req 2), and continue executing the non-grouping analysis stages (Req 1.12). The current `MTVS.xlsx` triggers this absence branch.
+- **Demographic-column detection (Req 1.10–1.12).** Detect whether the nine per-respondent demographic grouping columns — Gender, Age band, Marital Status, Occupation, Metaverse Engagement Frequency, NFT Interaction, Virtual Event Participation, Social Interaction/Content Creation, and Monthly Family Income — are present. Where present, report each variable's observed category count and percentage and compare every category frequency against the expected Respondent Demographic Profile (Table 1; N = 312), flagging any deviation (Req 1.11). Where one or more demographic columns are absent, record that per-respondent demographic data is unavailable, record the confidentiality status and that Multi-Group Analysis is NOT ESTIMABLE (Req 2.4, 12.1), and continue executing the non-grouping analysis stages (Req 1.12). The current `MTVS.xlsx` triggers this absence branch, consistent with the confidential-by-design demographics.
 
 ```r
 load_data(path) -> list(analysis_df, id_labels, validation, demographics_present)
 ```
 
-### Demographic Merge (Requirement 2)
+### Demographic Status and Conditional Merge (Requirement 2)
 
-**Input:** `analysis_df` (keyed by `ID`), an external per-respondent demographic frame keyed by `ID`. **Output:** `merged_df` or a blocked-dependency record.
+**Input:** `analysis_df` (keyed by `ID`). **Output:** a confidentiality-status record and an MGA-not-estimable report; *conditionally*, a `merged_df` if non-confidential per-respondent demographics ever become available internally.
 
-The current `MTVS.xlsx` contains only `S.No`, `ID`, the 20 substantive indicators, and `ATT_1`/`ATT_2`; it has no per-respondent demographic columns, and the aggregate Table 1 counts are insufficient to assign individual respondents to groups (Req 2.2). To enable Multi-Group Analysis, the `Data_Loader` provides a documented merge procedure:
+**Primary behavior (this dataset).** Per-respondent demographic values are **confidential and unavailable by design**: respondents were given a confidentiality assurance, and those values will **not** be released or merged. The current `MTVS.xlsx` contains only `S.No`, `ID`, the 20 substantive indicators, and `ATT_1`/`ATT_2`; the aggregate Table 1 counts are insufficient to assign individual respondents to groups (Req 2.2, 2.3). Accordingly, the `Data_Loader` **records the confidentiality status** — naming the nine Grouping_Variables that Multi-Group Analysis would require and stating that the published aggregate counts are the only demographic data available — and the `MGA_Module` **reports Multi-Group Analysis as NOT ESTIMABLE** and records hypothesis H4 as not testable with the available data (Req 2.1–2.4, 12.1).
 
-- **Join on `ID`.** Left-join the demographic frame to `analysis_df` on the `ID` case label, preserving the row count at exactly 312 (Req 2.3). The merge is a bijection on `ID`: every analysis row matches exactly one demographic row and vice versa (basis of Correctness Property 21).
-- **Category-total validation.** For each demographic variable, validate that its merged category frequencies match the expected Respondent Demographic Profile (Table 1) and that the category counts sum to exactly 312. **Halt with a reported discrepancy** when any demographic variable's category counts do not sum to 312 (Req 2.4).
+##### Conditional Merge Path (CONDITIONAL — applies only if non-confidential per-respondent demographic data becomes available internally)
+
+The following documented merge procedure is retained **only** for the conditional case in which non-confidential per-respondent demographic values become available internally (Req 2.5–2.7). It is **not exercised for the current dataset.**
+
+- **Join on `ID`.** Left-join the demographic frame to `analysis_df` on the `ID` case label, preserving the row count at exactly 312 (Req 2.5). The merge is a bijection on `ID`: every analysis row matches exactly one demographic row and vice versa (basis of the conditional Correctness Property 21).
+- **Category-total validation.** For each demographic variable, validate that its merged category frequencies match the expected Respondent Demographic Profile (Table 1) and that the category counts sum to exactly 312. **Halt with a reported discrepancy** when any demographic variable's category counts do not sum to 312 (Req 2.6).
 - **Expected category counts (Table 1; N = 312)** used for validation:
 
 | Demographic variable | Categories (expected count) |
@@ -153,10 +158,13 @@ The current `MTVS.xlsx` contains only `S.No`, `ID`, the 20 substantive indicator
 | Social Interaction/Content Creation | Yes (164), No (148) |
 | Monthly Family Income | INR ≤ 30,000 (57), INR 30,001–50,000 (80), INR 50,001–80,000 (100), INR 80,001+ (75) |
 
-- **Blocked dependency.** If per-respondent demographic data cannot be supplied or merged, the `MGA_Module` records Multi-Group Analysis as **blocked by an unmet data dependency** and names the required Grouping_Variables in the report (Req 2.5).
+- **MGA on merged data.** Where the merge succeeds, the `MGA_Module` performs Multi-Group Analysis as specified in the conditional block of Requirement 12 (MICOM followed by permutation/PLS-MGA testing) (Req 2.7).
 
 ```r
-merge_demographics(analysis_df, demo_df) -> list(merged_df | blocked_record, validation)
+# Primary: record confidentiality status; MGA reported NOT ESTIMABLE
+record_demographic_status(analysis_df) -> list(confidential_record, mga_not_estimable)
+# Conditional only (non-confidential per-respondent data available internally):
+merge_demographics(analysis_df, demo_df) -> list(merged_df, validation)
 ```
 
 ### Run_Manifest Builder (Requirement 2)
@@ -222,11 +230,17 @@ Computes specific indirect effects UE→BSAT→BSUC and UX→BSAT→BSUC as prod
 
 Computes total effect (importance) and rescaled mean score (performance, rescaled to 0–100) of UE, UX, BSAT with respect to target BSUC (Req 9.1). Produces a four-quadrant importance-performance map placing each predictor (Req 9.2), a table of importance/performance values (Req 9.3), and managerial implications identifying high-importance/low-performance constructs as highest improvement potential (Req 9.4).
 
-### MGA_Module (Requirement 12, active — data-dependency-gated)
+### MGA_Module (Requirement 12, NOT ESTIMABLE for this dataset — confidential demographics)
 
-Multi-Group Analysis is an **active, required analysis** that tests H4 (demographic moderation of structural relationships). It consumes the `merged_df` produced by the demographic merge (Req 2.3). Where per-respondent demographic data is available, the module runs the full MICOM → permutation/PLS-MGA pipeline across all nine Grouping_Variables; where such data is unavailable (the current `MTVS.xlsx` case), it records Multi-Group Analysis as **blocked by the data dependency in Requirement 2** and names the required Grouping_Variables (Req 12.1, 2.5).
+Multi-Group Analysis tests H4 (demographic moderation of structural relationships). For this dataset it is **NOT ESTIMABLE**: per-respondent demographic values are **confidential and unavailable by design** and will not be supplied, so individual respondents cannot be assigned to demographic groups. The `MGA_Module` therefore **reports Multi-Group Analysis as NOT ESTIMABLE**, records hypothesis **H4 as not testable** with the available data (reported descriptively only), and names the Grouping_Variables that Multi-Group Analysis would require, stating that per-respondent values for them will not be supplied (Req 12.1, 12.2, 2.4).
 
-**Grouping_Variables and comparison strategy (Req 12.2, 12.3).**
+The full MICOM → permutation/PLS-MGA design below is retained as a **CONDITIONAL block** that would be executed **only** if non-confidential per-respondent demographic data became available internally and were merged on `ID` (Req 2.5–2.7, 12.3). It is **not exercised for the current `MTVS.xlsx`.**
+
+##### Conditional Block (applies only WHERE non-confidential per-respondent demographic data is available internally)
+
+Where the conditional merge supplies `merged_df`, the module runs the full pipeline across all nine Grouping_Variables.
+
+**Grouping_Variables and comparison strategy (Req 12.4).**
 
 - **Dichotomous variables** — Gender, NFT Interaction, Virtual Event Participation, and Social Interaction/Content Creation — are handled as **direct two-group comparisons**.
 - **Multi-category variables** — Age band, Marital Status, Occupation, Metaverse Engagement Frequency, and Monthly Family Income — are compared either through **pairwise comparisons of all category pairs** or through the **Overall Test of Group differences (OTG)/omnibus** approach. The chosen strategy is **documented per variable**: omnibus OTG is used as the primary screen for any variable with more than three categories (Age, Metaverse Engagement Frequency, Monthly Family Income), with significant omnibus results followed by pairwise PLS-MGA; variables with exactly three categories (Marital Status, Occupation) use exhaustive pairwise comparisons.
@@ -274,9 +288,9 @@ Detailed in the Reporting Design section below.
 
 `S.No` is dropped entirely; `ID` is excluded from computation but retained as a label.
 
-### Merged Demographic Dataset (`merged_df`)
+### Merged Demographic Dataset (`merged_df`) — conditional path only
 
-Produced by the ID-keyed demographic merge (Req 2.3). It extends `analysis_df` with the nine categorical Grouping_Variables, preserving exactly 312 rows.
+This dataset exists **only on the conditional path** where non-confidential per-respondent demographic data becomes available internally and is joined via the ID-keyed merge (Req 2.5). It is **not produced for the current dataset** (per-respondent demographics are confidential). When produced, it extends `analysis_df` with the nine categorical Grouping_Variables, preserving exactly 312 rows.
 
 | Field | Type | Notes |
 |---|---|---|
@@ -292,7 +306,7 @@ Produced by the ID-keyed demographic merge (Req 2.3). It extends `analysis_df` w
 | `Social_Content` | factor | Yes, No |
 | `Monthly_Income` | factor (ordered) | INR ≤ 30,000; 30,001–50,000; 50,001–80,000; 80,001+ |
 
-**Expected category counts (Table 1; N = 312)** — the validation reference for both the merge (Req 2.4) and Table 1 reporting (Req 6):
+**Expected category counts (Table 1; N = 312)** — the validation reference for Table 1 reporting from published aggregate counts (Req 6) and, on the conditional path only, for the merge (Req 2.6):
 
 | Demographic variable | Categories (expected count; expected %) |
 |---|---|
@@ -306,7 +320,7 @@ Produced by the ID-keyed demographic merge (Req 2.3). It extends `analysis_df` w
 | Social Interaction/Content Creation | Yes (164; 52.56%), No (148; 47.44%) |
 | Monthly Family Income | INR ≤ 30,000 (57; 18.40%), INR 30,001–50,000 (80; 25.64%), INR 50,001–80,000 (100; 32.05%), INR 80,001+ (75; 23.91%) |
 
-Each variable's counts sum to 312; the merge halts on any mismatch (Req 2.4), and MGA is blocked with a named-dependency message when the demographic columns are absent (Req 2.5, 12.1).
+Each variable's counts sum to 312. Table 1 is reported from these published aggregate counts because per-respondent demographics are confidential and unavailable, so **Multi-Group Analysis is reported NOT ESTIMABLE and H4 is not testable** for this dataset (Req 2.4, 12.1). On the conditional path only — where non-confidential per-respondent data becomes available internally — the merge halts on any category-total mismatch (Req 2.6).
 
 ### seminr Measurement Model (reflective)
 
@@ -433,13 +447,13 @@ All robustness resampling uses the recorded seed (Req 2.2).
 
 ### Respondent Demographic Profile (Table 1) (Requirement 6)
 
-Where the per-respondent demographic variables are present in `merged_df`, the `Reporting_Module` produces a **Respondent Demographic Profile (Table 1, N = 312)** reporting the **count and percentage of each category for all nine demographic variables** (Req 6.1). The reported counts and percentages match the expected reference (Req 6.2–6.10): Gender Male (143; 46.00%) / Female (169; 54.00%); Age 18–22 (64; 20.51%), 23–28 (75; 24.04%), 29–34 (60; 19.23%), 35–41 (57; 18.27%), 42–45 (56; 17.95%); Marital Status Single (107; 34.29%), Married with children (84; 26.93%), Married without children (121; 38.78%); Occupation Students (88; 28.21%), Job (102; 32.69%), Business (122; 39.10%); Metaverse Engagement Daily (52; 16.67%), Several times a week (98; 31.41%), Weekly (73; 23.38%), Monthly (54; 17.31%), Rarely (35; 11.21%); NFT Interaction Yes (141; 45.19%) / No (171; 54.81%); Virtual Event Participation Yes (129; 41.35%) / No (183; 58.65%); Social Interaction/Content Creation Yes (164; 52.56%) / No (148; 47.44%); Monthly Family Income INR ≤ 30,000 (57; 18.40%), 30,001–50,000 (80; 25.64%), 50,001–80,000 (100; 32.05%), 80,001+ (75; 23.91%).
+The `Reporting_Module` produces the **Respondent Demographic Profile (Table 1, N = 312)** from the **published aggregate category counts and percentages** for all nine demographic variables, because per-respondent demographic values are confidential and unavailable (Req 6.1, Requirement 2). The reported counts and percentages match the published reference (Req 6.2–6.10): Gender Male (143; 46.00%) / Female (169; 54.00%); Age 18–22 (64; 20.51%), 23–28 (75; 24.04%), 29–34 (60; 19.23%), 35–41 (57; 18.27%), 42–45 (56; 17.95%); Marital Status Single (107; 34.29%), Married with children (84; 26.93%), Married without children (121; 38.78%); Occupation Students (88; 28.21%), Job (102; 32.69%), Business (122; 39.10%); Metaverse Engagement Daily (52; 16.67%), Several times a week (98; 31.41%), Weekly (73; 23.38%), Monthly (54; 17.31%), Rarely (35; 11.21%); NFT Interaction Yes (141; 45.19%) / No (171; 54.81%); Virtual Event Participation Yes (129; 41.35%) / No (183; 58.65%); Social Interaction/Content Creation Yes (164; 52.56%) / No (148; 47.44%); Monthly Family Income INR ≤ 30,000 (57; 18.40%), 30,001–50,000 (80; 25.64%), 50,001–80,000 (100; 32.05%), 80,001+ (75; 23.91%).
 
 **Validation (Req 6.11).** For each demographic variable, verify that the category counts sum to exactly 312 and flag any variable whose category percentages do not sum to 100% within rounding tolerance (basis of Correctness Property 20).
 
 **APA formatting (Req 6.12).** Render Table 1 with `gt`/`flextable` per APA 7th-edition conventions: a table number, an italicized title, column headers (Variable, Category, n, %), and explanatory notes (including N = 312 and rounding tolerance).
 
-**Fallback (Req 6.13).** If the per-respondent demographic variables are unavailable (the current `MTVS.xlsx` case), report Table 1 from the supplied aggregate Table 1 counts and annotate that per-respondent demographic data is required for Multi-Group Analysis (Req 2).
+**Confidentiality annotation (Req 6.13).** Annotate Table 1 to state that the counts derive from the **published aggregate Respondent Demographic Profile**, that **per-respondent demographic data is confidential and unavailable**, and that **Multi-Group Analysis is therefore not estimable** for this dataset (Requirements 2 and 12). Where non-confidential per-respondent demographic values become available internally, the `Reporting_Module` MAY regenerate Table 1 directly from those per-respondent values.
 
 ### Hypothesis & Proposition Decision Tables (Requirements 16, 17)
 
@@ -617,23 +631,29 @@ These properties target the pipeline's pure calculators (composites, calibration
 
 ### Property 20: Demographic category counts sum to 312 and percentages to 100%
 
-*For any* Respondent Demographic Profile rendered from per-respondent demographics, each of the nine demographic variables SHALL have category counts summing to exactly 312, category percentages summing to 100% within rounding tolerance, and each category count/percentage SHALL match the Table 1 reference (Gender 143/169; Age 64/75/60/57/56; Marital 107/84/121; Occupation 88/102/122; Engagement 52/98/73/54/35; NFT 141/171; Virtual Event 129/183; Social-Content 164/148; Income 57/80/100/75).
+*For any* Respondent Demographic Profile rendered from the published aggregate category counts, each of the nine demographic variables SHALL have category counts summing to exactly 312, category percentages summing to 100% within rounding tolerance, and each category count/percentage SHALL match the Table 1 reference (Gender 143/169; Age 64/75/60/57/56; Marital 107/84/121; Occupation 88/102/122; Engagement 52/98/73/54/35; NFT 141/171; Virtual Event 129/183; Social-Content 164/148; Income 57/80/100/75).
 
 **Validates: Requirements 6.1, 6.2, 6.3, 6.4, 6.5, 6.6, 6.7, 6.8, 6.9, 6.10, 6.11**
 
 ### Property 21: ID-keyed demographic merge preserves exactly 312 rows and is a bijection on ID
 
+*Conditional — applies only where non-confidential per-respondent demographic data is available internally; not exercised for the current dataset.*
+
 *For any* analysis dataset and per-respondent demographic frame that share the same set of `ID` values, the merge SHALL produce exactly 312 rows, SHALL pair each analysis row with exactly one demographic row and vice versa (a bijection on `ID`, with no duplicated, dropped, or unmatched `ID`), and SHALL halt with a reported discrepancy whenever any demographic variable's merged category counts do not sum to 312.
 
-**Validates: Requirements 2.3, 2.4**
+**Validates: Requirements 2.5, 2.6**
 
 ### Property 22: PLS-MGA group-difference flag is set if and only if the difference p-value ≤ 0.05
+
+*Conditional — applies only where non-confidential per-respondent demographic data is available internally; not exercised for the current dataset.*
 
 *For any* path-by-group comparison produced by the permutation/PLS-MGA test, the "significant group difference" decision flag SHALL be set if and only if the reported difference p-value is ≤ 0.05.
 
 **Validates: Requirements 12.5, 12.6**
 
 ### Property 23: Subgroup adequacy flag is set if and only if subgroup n is below the minimum
+
+*Conditional — applies only where non-confidential per-respondent demographic data is available internally; not exercised for the current dataset.*
 
 *For any* subgroup, the underpowered flag SHALL be set if and only if the subgroup sample size is below the minimum required by the inverse-square-root method and the 10-times rule applied per subgroup; when flagged, the estimated group difference and its p-value SHALL still be reported.
 
@@ -654,9 +674,9 @@ The pipeline distinguishes **halting errors** (cannot produce valid results) fro
 | Non-finite Cook's distance or 4/n | 4.6 | **Do not flag**; only flag when both finite and D > 4/n |
 | No common-method-bias test performed | 5.11 | Record an explicit **validation failure** |
 | Chi-square unavailable (PLS-SEM) | 5.13 | Report **not applicable** with explanation |
-| Demographic category counts do not sum to 312 on merge | 2.4 | **Halt**; report the discrepant demographic variable and its category totals |
-| Per-respondent demographics absent (cannot merge) | 2.5, 12.1 | Record MGA **blocked by unmet data dependency**; name the required Grouping_Variables |
-| Underpowered MGA subgroup | 12.8 | **Continue**; flag the comparison with a caution and still report the group difference and p-value |
+| Per-respondent demographics confidential/unavailable (by design) | 2.4, 12.1 | Record confidentiality status; report Multi-Group Analysis **NOT ESTIMABLE**; record H4 as **not testable**; name the required Grouping_Variables |
+| Demographic category counts do not sum to 312 on merge (conditional path only) | 2.6 | **Halt**; report the discrepant demographic variable and its category totals (applies only where non-confidential per-respondent data is available internally) |
+| Underpowered MGA subgroup (conditional path only) | 12.8 | **Continue**; flag the comparison with a caution and still report the group difference and p-value (conditional path) |
 | Calibrated membership == 0.5 | 11.5 | Adjust by δ away from 0.5 |
 | Duplicated statistic disagreement | 16.3, 24.3 | **Halt** at consistency gate; report the conflict |
 | Hypothesis-table vs source-table mismatch | 16.3 | Flag for review and still produce the table; underlying values enforced equal via the store |
@@ -669,10 +689,10 @@ A dual approach combines example-based unit tests (specific behaviors, edge case
 
 ### Unit Tests (examples, edge cases, integration)
 
-- **Calculator fixtures with known answers:** composite mean, AVE, indicator reliability, HTMT, f², VAF, necessity/sufficiency consistency, coverage — each verified against hand-computed reference values. **Demographic/MGA calculators:** category count/percentage tabulation against the Table 1 reference (Req 6.11), ID-keyed merge row-count and bijection checks (Req 2.3), category-total validation halting on a deliberately corrupted total (Req 2.4), PLS-MGA group-difference decision at the p ≤ 0.05 boundary (Req 12.6), and subgroup adequacy thresholding via the inverse-square-root/10× rule (Req 12.7).
+- **Calculator fixtures with known answers:** composite mean, AVE, indicator reliability, HTMT, f², VAF, necessity/sufficiency consistency, coverage — each verified against hand-computed reference values. **Demographic/MGA calculators:** category count/percentage tabulation against the Table 1 reference from published aggregate counts (Req 6.11); **conditional-path calculators (not exercised for the current dataset)** — ID-keyed merge row-count and bijection checks (Req 2.5), category-total validation halting on a deliberately corrupted total (Req 2.6), PLS-MGA group-difference decision at the p ≤ 0.05 boundary (Req 12.6), and subgroup adequacy thresholding via the inverse-square-root/10× rule (Req 12.7).
 - **Calibration golden checks:** direct anchors (6.5/4.0/2.0) and percentile anchors against `QCA::calibrate` reference output; verify the δ-adjustment removes exact-0.5 memberships.
 - **Edge cases:** exactly-1.0 reliability (Req 5.5), non-finite Cook's distance/4-n (Req 4.6), all-missing construct → NA composite (Req 3.3), out-of-range values present/absent (Req 1.6/1.7), row count != 312 (Req 1.8).
-- **Conditional/structural examples:** MGA reports a **blocked-dependency** record naming the Grouping_Variables when demographic columns are absent, and runs MICOM + PLS-MGA when demographics are merged (Req 2.5, 12.1); `Run_Manifest` contains all required fields and the recorded hash matches the input file (Req 2.3/2.5); required APA tables and narrative sections present with consistent decimals (Req 20–23); Respondent Demographic Profile (Table 1) renders with APA formatting and a per-respondent-unavailable fallback annotation (Req 6.12, 6.13).
+- **Conditional/structural examples:** MGA reports Multi-Group Analysis **NOT ESTIMABLE** with H4 recorded as not testable (naming the Grouping_Variables) for the current confidential-demographics dataset (Req 2.4, 12.1), and — on the conditional path only — runs MICOM + PLS-MGA when non-confidential per-respondent demographics are merged internally (Req 2.5–2.7); `Run_Manifest` contains all required fields and the recorded hash matches the input file (Req 2.3/2.5); required APA tables and narrative sections present with consistent decimals (Req 20–23); Respondent Demographic Profile (Table 1) renders with APA formatting from published aggregate counts and the confidential/MGA-not-estimable annotation (Req 6.12, 6.13).
 - **Integration / smoke:** end-to-end run on `MTVS.xlsx` produces all artifacts; figures export at >= 300 DPI with titles/axis labels/legends (Req 15, 19); the consistency gate passes on a conflict-free store and halts on an injected conflict (Req 24.3).
 
 ### Property-Based Tests

@@ -21,7 +21,7 @@ Four reflective latent constructs measured on 7-point Likert indicators (verifie
 - **H1**: UE has a positive direct effect on BSUC.
 - **H2**: UX has a positive direct effect on BSUC.
 - **H3**: BSAT mediates the effects of UE on BSUC and of UX on BSUC.
-- **H4 (RQ-MGA — Demographic Moderation)**: The strength of one or more structural relationships in the model differs across key demographic segments (gender, age band, marital status, occupation, metaverse engagement frequency, NFT interaction, virtual event participation, social interaction/content creation, and monthly family income).
+- **H4 (RQ-MGA — Demographic Moderation)**: The strength of one or more structural relationships in the model differs across key demographic segments (gender, age band, marital status, occupation, metaverse engagement frequency, NFT interaction, virtual event participation, social interaction/content creation, and monthly family income). **Note: H4 is not testable with the available (confidential-demographics) data; per-respondent demographic values are confidential and will not be supplied, so Multi-Group Analysis is not estimable. H4 is reported descriptively only.**
 - Additional structural paths: UE → BSAT, UX → BSAT, BSAT → BSUC.
 - **P1 (fsQCA)**: Multiple configurations of UE, UX, and BSAT lead to High Brand Success, exhibiting equifinality and causal asymmetry.
 
@@ -34,8 +34,9 @@ These facts were confirmed by inspecting the actual file and are recorded so tha
 - All 20 substantive indicators take **integer values in the range 1–7** (7-point Likert), confirming the assumed scale.
 - There are **0 missing values** and **0 duplicate rows** (by `ID` and by full row) in the current file.
 - **No per-respondent demographic columns are present** in `MTVS.xlsx`. The file does NOT contain gender, age, marital status, occupation, metaverse engagement frequency, NFT interaction, virtual event participation, social interaction/content creation, or monthly family income as per-respondent fields.
-- A **Respondent Demographic Profile (Table 1, N = 312)** has been provided separately, but only as **aggregate category counts and percentages**, not as per-respondent values. The provided profile covers nine demographic variables: Gender, Age (Years), Marital Status, Occupation, Metaverse Engagement Frequency, NFT Interaction, Virtual Event Participation, Social Interaction/Content Creation, and Monthly Family Income.
-- **Data dependency for Multi-Group Analysis (PART G):** Because aggregate counts cannot assign individual respondents to groups, the **per-respondent demographic values must be supplied or merged** into the analysis dataset (joined on the `ID` case label) before Multi-Group Analysis can run. Multi-Group Analysis is now an **applicable, required analysis** (Requirement 12), gated on this explicit data dependency (Requirement 2). The Data_Loader must detect and validate these columns (Requirement 1).
+- A **Respondent Demographic Profile (Table 1, N = 312)** has been provided separately, but only as **aggregate category counts and percentages**, not as per-respondent values. The provided profile covers nine demographic variables: Gender, Age (Years), Marital Status, Occupation, Metaverse Engagement Frequency, NFT Interaction, Virtual Event Participation, Social Interaction/Content Creation, and Monthly Family Income. **Table 1 is reported from these published aggregate counts only.**
+- **Per-respondent demographic data is confidential by design:** respondents were given a confidentiality assurance, and per-respondent demographic values will **not** be released or merged into the analysis dataset. Only the aggregate category counts in the Respondent Demographic Profile (Table 1) are available.
+- **Multi-Group Analysis (PART G) is NOT ESTIMABLE for this dataset:** because per-respondent demographic values are confidential and will not be supplied, individual respondents cannot be assigned to demographic groups. Consequently, hypothesis **H4 (demographic moderation) is not testable** with the available data. Multi-Group Analysis is therefore reported as not estimable (Requirement 12), and the ID-keyed merge / MICOM / PLS-MGA procedure is retained only as an **optional, conditional path** that would apply if non-confidential per-respondent demographic data ever became available internally (Requirement 2).
 
 ## Glossary
 
@@ -93,15 +94,20 @@ These facts were confirmed by inspecting the actual file and are recorded so tha
 
 ### Requirement 2: Demographic Grouping Variables and Multi-Group Analysis Data Dependency
 
-**User Story:** As a researcher, I want per-respondent demographic variables available in the analysis dataset, so that Multi-Group Analysis across demographic segments can be performed and the sample profile can be reported.
+**User Story:** As a researcher, I want the confidentiality status of the per-respondent demographic variables recorded explicitly, so that Multi-Group Analysis is correctly reported as not estimable and any future conditional path is documented.
 
 #### Acceptance Criteria
 
-1. THE Data_Loader SHALL treat the following per-respondent demographic variables as the required Grouping_Variables for Multi-Group Analysis: Gender, Age band, Marital Status, Occupation, Metaverse Engagement Frequency, NFT Interaction, Virtual Event Participation, Social Interaction/Content Creation, and Monthly Family Income.
-2. WHEN the per-respondent demographic columns are absent from `MTVS.xlsx`, THE Data_Loader SHALL report that the current input file contains only the 20 substantive indicators and the controls ATT_1 and ATT_2, and SHALL state that the aggregate category counts in the Respondent Demographic Profile (Table 1) are insufficient to assign individual respondents to groups.
-3. THE Data_Loader SHALL provide a documented merge procedure that joins per-respondent demographic values to the analysis dataset on the `ID` case label and SHALL preserve the row count at 312 after the merge.
-4. WHERE per-respondent demographic values are merged, THE Data_Loader SHALL validate that each demographic variable's category frequencies match the Respondent Demographic Profile (Table 1) and SHALL halt with a reported discrepancy when any demographic variable's category counts do not sum to 312.
-5. IF per-respondent demographic data cannot be supplied or merged, THEN THE MGA_Module SHALL record Multi-Group Analysis as blocked by an unmet data dependency and SHALL name the required Grouping_Variables in the report.
+1. THE Data_Loader SHALL record that the following per-respondent demographic variables are confidential and unavailable by design, and SHALL name them as the Grouping_Variables that Multi-Group Analysis would require: Gender, Age band, Marital Status, Occupation, Metaverse Engagement Frequency, NFT Interaction, Virtual Event Participation, Social Interaction/Content Creation, and Monthly Family Income.
+2. THE Data_Loader SHALL report that respondents were given a confidentiality assurance, that per-respondent demographic values will not be released or merged, and that the current input file contains only the 20 substantive indicators and the controls ATT_1 and ATT_2.
+3. THE Data_Loader SHALL state that the aggregate category counts in the Respondent Demographic Profile (Table 1) are insufficient to assign individual respondents to groups, and SHALL record that the aggregate counts are the only demographic data available.
+4. THE MGA_Module SHALL report Multi-Group Analysis as NOT ESTIMABLE for this dataset because per-respondent demographic data is confidential and will not be supplied, and SHALL record hypothesis H4 as not testable with the available data.
+
+##### Conditional Path (applies only if non-confidential per-respondent demographic data ever becomes available internally)
+
+5. WHERE non-confidential per-respondent demographic values become available internally, THE Data_Loader SHALL apply a documented merge procedure that joins those values to the analysis dataset on the `ID` case label and SHALL preserve the row count at 312 after the merge.
+6. WHERE per-respondent demographic values are merged, THE Data_Loader SHALL validate that each demographic variable's category frequencies match the Respondent Demographic Profile (Table 1), and IF any demographic variable's category counts do not sum to 312, THEN THE Data_Loader SHALL halt and report the discrepancy.
+7. WHERE per-respondent demographic values are merged, THE MGA_Module SHALL perform Multi-Group Analysis as specified in the conditional block of Requirement 12 (MICOM followed by permutation/PLS-MGA testing).
 
 ### Requirement 3: Reproducibility and Run Provenance
 
@@ -151,7 +157,7 @@ These facts were confirmed by inspecting the actual file and are recorded so tha
 
 #### Acceptance Criteria
 
-1. WHERE the per-respondent demographic variables are present in the analysis dataset, THE Reporting_Module SHALL produce a Respondent Demographic Profile table (Table 1) reporting the count and percentage of each category for all nine demographic variables, based on N = 312.
+1. THE Reporting_Module SHALL produce the Respondent Demographic Profile table (Table 1) from the published aggregate category counts and percentages for all nine demographic variables, based on N = 312, because per-respondent demographic values are confidential and unavailable (Requirement 2).
 2. THE Reporting_Module SHALL report Gender as Male (143; 46.00%) and Female (169; 54.00%).
 3. THE Reporting_Module SHALL report Age (Years) as 18–22 (64; 20.51%), 23–28 (75; 24.04%), 29–34 (60; 19.23%), 35–41 (57; 18.27%), and 42–45 (56; 17.95%).
 4. THE Reporting_Module SHALL report Marital Status as Single (107; 34.29%), Married with children (84; 26.93%), and Married without children (121; 38.78%).
@@ -163,7 +169,7 @@ These facts were confirmed by inspecting the actual file and are recorded so tha
 10. THE Reporting_Module SHALL report Monthly Family Income as INR 30,000 or less (57; 18.40%), INR 30,001–50,000 (80; 25.64%), INR 50,001–80,000 (100; 32.05%), and INR 80,001 and above (75; 23.91%).
 11. THE Reporting_Module SHALL verify that each demographic variable's category counts sum to 312 and SHALL flag any demographic variable whose category percentages do not sum to 100% within rounding tolerance.
 12. THE Reporting_Module SHALL format the Respondent Demographic Profile table per APA 7th-edition conventions, including a table number, an italicized title, column headers, and explanatory notes.
-13. IF the per-respondent demographic variables are unavailable, THEN THE Reporting_Module SHALL report the Respondent Demographic Profile from the supplied aggregate Table 1 counts and SHALL annotate that per-respondent demographic data is required for Multi-Group Analysis (Requirement 2).
+13. THE Reporting_Module SHALL annotate Table 1 to state that the counts derive from the published aggregate Respondent Demographic Profile, that per-respondent demographic data is confidential and unavailable, and that Multi-Group Analysis is therefore not estimable for this dataset (Requirements 2 and 12). WHERE non-confidential per-respondent demographic values become available internally, THE Reporting_Module MAY regenerate Table 1 directly from those per-respondent values.
 
 ### Requirement 7: PART B — Reflective Measurement Model Evaluation
 
@@ -241,15 +247,20 @@ These facts were confirmed by inspecting the actual file and are recorded so tha
 
 #### Acceptance Criteria
 
-1. WHERE per-respondent demographic data is available in the analysis dataset, THE MGA_Module SHALL perform Multi-Group Analysis across the demographic Grouping_Variables, and WHERE such data is unavailable THE MGA_Module SHALL report Multi-Group Analysis as blocked by the data dependency in Requirement 2.
-2. THE MGA_Module SHALL treat the dichotomous variables Gender, NFT Interaction, Virtual Event Participation, and Social Interaction/Content Creation as direct two-group comparisons.
-3. THE MGA_Module SHALL compare the multi-category variables Age band, Marital Status, Occupation, Metaverse Engagement Frequency, and Monthly Family Income either through pairwise comparisons of all category pairs or through the Overall Test of Group differences (OTG)/omnibus approach, and SHALL document which comparison strategy is applied to each multi-category variable.
-4. FOR EACH Grouping_Variable, THE MGA_Module SHALL assess measurement invariance using the MICOM procedure, comprising the configural invariance step, the compositional invariance step, and the equality-of-composite-means-and-variances step (Henseler et al., 2016).
-5. WHERE at least partial measurement invariance is established, THE MGA_Module SHALL perform a permutation test and the PLS-MGA test for each structural path and SHALL report, per group, the standardized path estimate, the absolute group difference, and the p-value of the difference (Hair et al., 2022).
-6. FOR EACH path-by-group comparison, THE MGA_Module SHALL record a decision of significant or non-significant group difference using a two-tailed threshold of p ≤ 0.05.
-7. THE MGA_Module SHALL evaluate the sample-size adequacy of each subgroup against the inverse-square-root method and the 10-times rule applied per subgroup, and SHALL flag any subgroup that is underpowered for structural estimation (Hair et al., 2022).
-8. IF a subgroup is flagged as underpowered, THEN THE MGA_Module SHALL report the affected group comparison with an explicit caution and SHALL still report the estimated group difference and its p-value.
-9. THE MGA_Module SHALL produce an APA-formatted multi-group results table reporting, per Grouping_Variable and per structural path, the per-group path estimates, the group difference, the difference p-value, and the invariance decision.
+1. FOR the current dataset, THE MGA_Module SHALL report Multi-Group Analysis as NOT ESTIMABLE because per-respondent demographic data is confidential and unavailable (Requirement 2), and SHALL state that hypothesis H4 is not testable with the available data and is reported descriptively only.
+2. THE MGA_Module SHALL name the Grouping_Variables that Multi-Group Analysis would require (Gender, Age band, Marital Status, Occupation, Metaverse Engagement Frequency, NFT Interaction, Virtual Event Participation, Social Interaction/Content Creation, and Monthly Family Income) and SHALL record that per-respondent values for these variables will not be supplied.
+
+##### Conditional Block (applies only WHERE non-confidential per-respondent demographic data is available internally)
+
+3. WHERE non-confidential per-respondent demographic data is available internally, THE MGA_Module SHALL perform Multi-Group Analysis across the demographic Grouping_Variables.
+4. WHERE non-confidential per-respondent demographic data is available internally, THE MGA_Module SHALL treat the dichotomous variables Gender, NFT Interaction, Virtual Event Participation, and Social Interaction/Content Creation as direct two-group comparisons.
+5. WHERE non-confidential per-respondent demographic data is available internally, THE MGA_Module SHALL compare the multi-category variables Age band, Marital Status, Occupation, Metaverse Engagement Frequency, and Monthly Family Income either through pairwise comparisons of all category pairs or through the Overall Test of Group differences (OTG)/omnibus approach, and SHALL document which comparison strategy is applied to each multi-category variable.
+6. WHERE non-confidential per-respondent demographic data is available internally, FOR EACH Grouping_Variable, THE MGA_Module SHALL assess measurement invariance using the MICOM procedure, comprising the configural invariance step, the compositional invariance step, and the equality-of-composite-means-and-variances step (Henseler et al., 2016).
+7. WHERE non-confidential per-respondent demographic data is available internally AND at least partial measurement invariance is established, THE MGA_Module SHALL perform a permutation test and the PLS-MGA test for each structural path and SHALL report, per group, the standardized path estimate, the absolute group difference, and the p-value of the difference (Hair et al., 2022).
+8. WHERE non-confidential per-respondent demographic data is available internally, FOR EACH path-by-group comparison, THE MGA_Module SHALL record a decision of significant or non-significant group difference using a two-tailed threshold of p ≤ 0.05.
+9. WHERE non-confidential per-respondent demographic data is available internally, THE MGA_Module SHALL evaluate the sample-size adequacy of each subgroup against the inverse-square-root method and the 10-times rule applied per subgroup, and SHALL flag any subgroup that is underpowered for structural estimation (Hair et al., 2022).
+10. WHERE non-confidential per-respondent demographic data is available internally AND a subgroup is flagged as underpowered, THE MGA_Module SHALL report the affected group comparison with an explicit caution and SHALL still report the estimated group difference and its p-value.
+11. WHERE non-confidential per-respondent demographic data is available internally, THE MGA_Module SHALL produce an APA-formatted multi-group results table reporting, per Grouping_Variable and per structural path, the per-group path estimates, the group difference, the difference p-value, and the invariance decision.
 
 ### Requirement 13: PART H — fsQCA Calibration
 

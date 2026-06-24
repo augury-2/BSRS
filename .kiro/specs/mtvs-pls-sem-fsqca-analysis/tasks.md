@@ -2,7 +2,7 @@
 
 ## Overview
 
-This plan converts the design in `design.md` into an incremental, test-driven R implementation. Tasks build outward from reproducibility/scaffolding infrastructure to the `Data_Loader` (including demographic-column detection and the ID-keyed demographic merge), the single-source-of-truth `ResultsStore`, the PLS-SEM modules, the **active** Multi-Group Analysis over merged demographics, the fsQCA modules, robustness checks, and finally the `Reporting_Module` (including the Respondent Demographic Profile, Table 1) and an end-to-end run on `MTVS.xlsx`.
+This plan converts the design in `design.md` into an incremental, test-driven R implementation. Tasks build outward from reproducibility/scaffolding infrastructure to the `Data_Loader` (including demographic-column detection and confidentiality-status recording, plus a conditional ID-keyed demographic merge), the single-source-of-truth `ResultsStore`, the PLS-SEM modules, the Multi-Group Analysis reported as **NOT ESTIMABLE** for this confidential-demographics dataset (with the MICOM/PLS-MGA path retained only as a conditional, not-exercised branch), the fsQCA modules, robustness checks, and finally the `Reporting_Module` (including the Respondent Demographic Profile, Table 1, built from published aggregate counts) and an end-to-end run on `MTVS.xlsx`.
 
 Conventions:
 - Implementation is in **R** (per the design's stack decision: `seminr` for PLS-SEM, `QCA`/`SetMethods` for fsQCA).
@@ -22,7 +22,7 @@ Conventions:
     - Configure `testthat` test runner and a `tests/helpers.R` with a `prop_tag()` convention and a shared `hedgehog` generator module (datasets in [1,7], loading vectors, membership vectors, path coefficients, R² pairs, results-store fixtures, demographic frames keyed by `ID`, per-group path estimates with difference p-values) including boundary/degenerate inputs
     - _Requirements: 3.4_
 
-- [ ] 2. Implement Data_Loader (PART pre-A ingestion, structural validation, demographic detection, and ID-keyed merge)
+- [ ] 2. Implement Data_Loader (PART pre-A ingestion, structural validation, demographic detection, confidentiality-status recording, and conditional ID-keyed merge)
   - [ ] 2.1 Implement `load_data(path)` ingestion and validation
     - Read the single worksheet via `readxl::read_excel`; assert presence of the 20 substantive indicators and `ATT_1`/`ATT_2`; halt with missing-column names if any required indicator is absent
     - Count per-indicator out-of-range/non-integer values in [1,7]; record (indicator, ID, value) and continue; skip the out-of-range report entirely when zero violations
@@ -34,22 +34,27 @@ Conventions:
   - [ ]* 2.3 Write property test for structural validation
     - **Property 19: Structural validation excludes identifier columns and counts out-of-range values**
     - **Validates: Requirements 1.5, 1.9**
-  - [ ] 2.4 Implement demographic grouping-column detection and validation
+  - [ ] 2.4 Implement demographic grouping-column detection and confidentiality-status recording
     - Detect whether the nine per-respondent demographic grouping columns (Gender, Age band, Marital Status, Occupation, Metaverse Engagement Frequency, NFT Interaction, Virtual Event Participation, Social Interaction/Content Creation, Monthly Family Income) are present in the analysis dataset
     - Where present, report each demographic variable's observed category count and percentage and compare every category frequency against the expected Respondent Demographic Profile (Table 1; N=312), flagging any category whose observed count deviates from the expected count
-    - Where one or more demographic columns are absent, record that per-respondent demographic data is unavailable, flag the Multi-Group Analysis data dependency (Requirement 2), and continue executing the non-grouping analysis stages (the current `MTVS.xlsx` triggers this absence branch)
-    - _Requirements: 1.10, 1.11, 1.12_
-  - [ ] 2.5 Implement the ID-keyed demographic merge and MGA data-dependency gate
+    - Where one or more demographic columns are absent (the current `MTVS.xlsx` triggers this branch), record that per-respondent demographic data is unavailable and continue executing the non-grouping analysis stages
+    - Record the confidentiality status: name the nine Grouping_Variables that Multi-Group Analysis would require; report that respondents were given a confidentiality assurance and that per-respondent demographic values will not be released or merged; state that the current file contains only the 20 indicators plus `ATT_1`/`ATT_2` and that the published aggregate Table 1 counts are insufficient to assign individual respondents to groups
+    - Record that Multi-Group Analysis is NOT ESTIMABLE for this dataset and that hypothesis H4 is not testable with the available data (reported descriptively only); write the confidentiality status and the MGA-not-estimable report to the `ResultsStore`
+    - _Requirements: 1.10, 1.11, 1.12, 2.1, 2.2, 2.3, 2.4_
+  - [ ] 2.5 Implement the ID-keyed demographic merge (conditional path only — not exercised for the current confidential-demographics dataset)
+    - CONDITIONAL: this path applies only WHERE non-confidential per-respondent demographic data becomes available internally; it is not run for the current `MTVS.xlsx`
     - Provide the documented merge that left-joins a per-respondent demographic frame to `analysis_df` on the `ID` case label as a bijection on `ID` (every analysis row matches exactly one demographic row and vice versa), preserving exactly 312 rows
     - Validate each demographic variable's merged category frequencies against the Table 1 reference and halt with a reported discrepancy when any variable's category counts do not sum to 312
-    - Report that the current `MTVS.xlsx` contains only the 20 indicators plus `ATT_1`/`ATT_2` and that aggregate Table 1 counts cannot assign individual respondents to groups; when demographics cannot be supplied/merged, record MGA as blocked by an unmet data dependency and name the required Grouping_Variables
-    - _Requirements: 2.2, 2.3, 2.4, 2.5_
-  - [ ]* 2.6 Write unit tests for demographic detection and merge with fixtures
-    - Fixtures: demographic columns absent -> unavailability recorded + dependency flagged + non-grouping stages continue; merge preserves 312 rows; bijection on `ID` (no duplicated/dropped/unmatched `ID`); corrupted category total (not summing to 312) -> halt with reported discrepancy; observed category counts/percentages compared to the Table 1 reference
+    - Where the merge succeeds, hand the `merged_df` to the conditional Multi-Group Analysis block (task 13)
+    - _Requirements: 2.5, 2.6, 2.7_
+  - [ ]* 2.6 Write unit tests for demographic detection and the conditional merge with fixtures
+    - Active (current dataset): demographic columns absent -> unavailability + confidentiality status recorded, MGA recorded NOT ESTIMABLE, non-grouping stages continue; observed category counts/percentages compared to the Table 1 reference where columns are present
+    - Conditional merge fixtures (not exercised for the current dataset): merge preserves 312 rows; bijection on `ID` (no duplicated/dropped/unmatched `ID`); corrupted category total (not summing to 312) -> halt with reported discrepancy
     - _Requirements: 1.11, 1.12, 2.3, 2.4, 2.5_
-  - [ ]* 2.7 Write property test for the ID-keyed demographic merge
+  - [ ]* 2.7 Write property test for the conditional ID-keyed demographic merge (not exercised for the current dataset)
     - **Property 21: ID-keyed demographic merge preserves exactly 312 rows and is a bijection on ID**
-    - **Validates: Requirements 2.3, 2.4**
+    - Conditional-path test — runs only WHERE non-confidential per-respondent demographic data becomes available internally
+    - **Validates: Requirements 2.5, 2.6**
 
 - [ ] 3. Implement Run_Manifest builder and seeded RNG management
   - [ ] 3.1 Implement seed setting and `Run_Manifest`
@@ -178,26 +183,34 @@ Conventions:
     - **Property 15: IPMA performance is a bounded rescaling of the construct mean**
     - **Validates: Requirements 11.1**
 
-- [ ] 13. Implement MGA_Module (PART G - active Multi-Group Analysis across demographic segments)
-  - [ ] 13.1 Implement comparison-strategy selection and MICOM measurement invariance
-    - Consume the `merged_df` produced by the demographic merge (task 2.5); where per-respondent demographics are available run MGA across all nine Grouping_Variables, and where unavailable record MGA as blocked by the Requirement 2 data dependency naming the required Grouping_Variables
+- [ ] 13. Implement MGA_Module (PART G — report Multi-Group Analysis NOT ESTIMABLE; conditional MICOM/PLS-MGA path retained)
+    - **Primary deliverable (this dataset):** In the `MGA_Module`, report Multi-Group Analysis as NOT ESTIMABLE because per-respondent demographic data is confidential and unavailable by design (Requirement 2); record hypothesis H4 as not testable with the available data (reported descriptively only); name the nine Grouping_Variables that Multi-Group Analysis would require (Gender, Age band, Marital Status, Occupation, Metaverse Engagement Frequency, NFT Interaction, Virtual Event Participation, Social Interaction/Content Creation, Monthly Family Income) and record that per-respondent values for them will not be supplied; write the NOT-ESTIMABLE status to the `ResultsStore`
+    - _Requirements: 12.1, 12.2_
+
+  ##### Conditional block (not exercised for the current confidential-demographics dataset)
+
+  This block runs only WHERE non-confidential per-respondent demographic data becomes available internally and is merged on `ID` (task 2.5).
+
+  - [ ] 13.1 (conditional) Implement comparison-strategy selection and MICOM measurement invariance
+    - CONDITIONAL — not exercised for the current dataset. Consume the `merged_df` produced by the conditional demographic merge (task 2.5) and run MGA across all nine Grouping_Variables
     - Treat the dichotomous variables (Gender, NFT Interaction, Virtual Event Participation, Social Interaction/Content Creation) as direct two-group comparisons; compare the multi-category variables (Age band, Marital Status, Occupation, Metaverse Engagement Frequency, Monthly Family Income) via a documented pairwise or OTG/omnibus strategy per variable (omnibus OTG primary screen for >3-category variables followed by pairwise; exhaustive pairwise for exactly-3-category variables)
     - For each Grouping_Variable run the three-step MICOM procedure: configural invariance, compositional invariance, and equality of composite means and variances (partial invariance from steps 1-2 is sufficient to proceed)
-    - _Requirements: 12.1, 12.2, 12.3, 12.4_
-  - [ ] 13.2 Implement permutation/PLS-MGA path comparison, subgroup adequacy, and the APA results table
+    - _Requirements: 12.3, 12.4, 12.5, 12.6_
+  - [ ] 13.2 (conditional) Implement permutation/PLS-MGA path comparison, subgroup adequacy, and the APA results table
+    - CONDITIONAL — not exercised for the current dataset
     - Where at least partial invariance holds, run a permutation test and the PLS-MGA test for each of the five structural paths, reporting per group the standardized path estimate, the absolute group difference, and the difference p-value, with a significant/non-significant decision at a two-tailed threshold of p<=0.05
     - Evaluate per-subgroup sample-size adequacy via the inverse-square-root method and the 10x rule (3 predictors into BSUC); flag underpowered subgroups and still report their estimated group difference and p-value with an explicit caution
     - Produce the APA-formatted multi-group results table reporting, per Grouping_Variable and per structural path, the per-group estimates, the group difference, the difference p-value, and the invariance decision (underpowered subgroups annotated), all written to the `ResultsStore`
-    - _Requirements: 12.5, 12.6, 12.7, 12.8, 12.9_
-  - [ ]* 13.3 Write unit tests for MGA decision logic with fixtures
-    - Group-difference decision at the p<=0.05 boundary; subgroup adequacy threshold via the inverse-square-root/10x rule; blocked-dependency path records the named Grouping_Variables when demographic columns are absent
-    - _Requirements: 12.1, 12.6, 12.7_
-  - [ ]* 13.4 Write property test for the PLS-MGA group-difference flag
+    - _Requirements: 12.7, 12.8, 12.9, 12.10, 12.11_
+  - [ ]* 13.3 (conditional) Write unit tests for MGA decision logic with fixtures (not exercised for the current dataset)
+    - Group-difference decision at the p<=0.05 boundary; subgroup adequacy threshold via the inverse-square-root/10x rule
+    - _Requirements: 12.8, 12.9_
+  - [ ]* 13.4 (conditional) Write property test for the PLS-MGA group-difference flag (not exercised for the current dataset)
     - **Property 22: PLS-MGA group-difference flag is set if and only if the difference p-value <= 0.05**
-    - **Validates: Requirements 12.5, 12.6**
-  - [ ]* 13.5 Write property test for subgroup adequacy
-    - **Property 23: Subgroup adequacy flag is set if and only if subgroup n is below the minimum**
     - **Validates: Requirements 12.7, 12.8**
+  - [ ]* 13.5 (conditional) Write property test for subgroup adequacy (not exercised for the current dataset)
+    - **Property 23: Subgroup adequacy flag is set if and only if subgroup n is below the minimum**
+    - **Validates: Requirements 12.9, 12.10**
 
 - [ ] 14. Checkpoint - PLS-SEM and MGA complete
   - Ensure all tests pass, ask the user if questions arise.
@@ -313,10 +326,11 @@ Conventions:
   - [ ]* 23.8 Write reporting smoke/integration tests
     - Assert all required APA tables and narrative sections are present with consistent decimals; figures export at >=300 DPI with titles/axes/legends; gate passes on a conflict-free store and halts on an injected conflict
     - _Requirements: 21.1, 22.1, 22.4, 24.3, 25.1, 26.3_
-  - [ ] 23.9 Generate the Respondent Demographic Profile (Table 1)
-    - Where per-respondent demographics are present in `merged_df`, produce the APA Table 1 (N=312) reporting the count and percentage of each category for all nine demographic variables matching the Table 1 reference (Gender 143/169; Age 64/75/60/57/56; Marital 107/84/121; Occupation 88/102/122; Engagement 52/98/73/54/35; NFT 141/171; Virtual Event 129/183; Social-Content 164/148; Income 57/80/100/75)
+  - [ ] 23.9 Generate the Respondent Demographic Profile (Table 1) from published aggregate counts
+    - Produce the APA Table 1 (N=312) from the PUBLISHED AGGREGATE category counts and percentages for all nine demographic variables, because per-respondent demographic values are confidential and unavailable (Requirement 2): Gender 143/169; Age 64/75/60/57/56; Marital 107/84/121; Occupation 88/102/122; Engagement 52/98/73/54/35; NFT 141/171; Virtual Event 129/183; Social-Content 164/148; Income 57/80/100/75
     - Verify each demographic variable's category counts sum to exactly 312 and percentages to 100% within rounding tolerance; APA formatting (table number, italicized title, headers Variable/Category/n/%, explanatory notes including N=312)
-    - Fall back to the supplied aggregate Table 1 counts with a per-respondent-unavailable annotation noting that per-respondent demographic data is required for Multi-Group Analysis (Requirement 2); all values read from the `ResultsStore`
+    - Annotate Table 1 to state that the counts derive from the published aggregate Respondent Demographic Profile, that per-respondent demographic data is confidential and unavailable, and that Multi-Group Analysis is therefore NOT ESTIMABLE for this dataset (Requirements 2 and 12); all values read from the `ResultsStore`
+    - (Conditional) WHERE non-confidential per-respondent demographic values become available internally, Table 1 MAY instead be regenerated directly from those per-respondent values
     - _Requirements: 6.1, 6.2, 6.3, 6.4, 6.5, 6.6, 6.7, 6.8, 6.9, 6.10, 6.11, 6.12, 6.13_
   - [ ]* 23.10 Write property test for the Respondent Demographic Profile
     - **Property 20: Demographic category counts sum to 312 and percentages to 100%**
@@ -324,7 +338,7 @@ Conventions:
 
 - [ ] 24. End-to-end integration on MTVS.xlsx
   - [ ] 24.1 Wire the full pipeline runner / `analysis.Rmd`
-    - Assemble the DAG: Data_Loader -> Run_Manifest -> {Screening, Composite_Builder, Measurement_Evaluator} -> Structural_Estimator -> {Mediation, Quality, IPMA} ; Data_Loader -> Demographic merge (Req 2) -> {MGA active (Req 12), Respondent Demographic Profile / Table 1 (Req 6)} ; Composite_Builder -> FSQCA (calibration -> necessity -> truth table -> minimization -> configuration -> visualizations -> proposition) -> Robustness ; all -> ResultsStore -> consistency gate -> Reporting; produce `output/` artifacts and `Run_Manifest.json`
+    - Assemble the DAG: Data_Loader -> Run_Manifest -> {Screening, Composite_Builder, Measurement_Evaluator} -> Structural_Estimator -> {Mediation, Quality, IPMA} ; Data_Loader -> demographic detection + confidentiality-status recording (Req 2) -> {MGA reported NOT ESTIMABLE (Req 12), Respondent Demographic Profile / Table 1 from published aggregate counts (Req 6)} , with the conditional ID-keyed merge + MICOM/PLS-MGA path wired but not exercised for the current dataset ; Composite_Builder -> FSQCA (calibration -> necessity -> truth table -> minimization -> configuration -> visualizations -> proposition) -> Robustness ; all -> ResultsStore -> consistency gate -> Reporting; produce `output/` artifacts and `Run_Manifest.json`
     - _Requirements: 1.1, 26.2_
   - [ ]* 24.2 Write the end-to-end integration test
     - Run the full pipeline on `MTVS.xlsx`; assert all tables/figures/appendix/manifest artifacts are produced, the consistency gate passes, the manifest hash matches the input file, and reruns reproduce reported statistics to 3 decimals
@@ -335,8 +349,10 @@ Conventions:
 - Tasks marked with `*` are optional test tasks and can be skipped for a faster MVP; core implementation tasks are never optional.
 - Each task references specific requirement sub-clauses for traceability; property test tasks additionally reference the design correctness property they validate.
 - Property-based tests use `hedgehog` with >= 100 iterations and carry the `# Feature: mtvs-pls-sem-fsqca-analysis, Property N` tag from the design.
-- Every requirement (1-26) is covered by at least one implementation task, and every correctness property (1-23) has a dedicated property-test task (P1->4.3, P2->15.3, P3->15.4, P4->8.4, P5->8.5, P6->8.6, P7->16.3, P8->17.4, P9->17.5, P10->18.3, P11->18.4, P12->10.3, P13->11.4, P14->9.4, P15->12.3, P16->20.3, P17->3.3/22.2, P18->5.4, P19->2.3, P20->23.10, P21->2.7, P22->13.4, P23->13.5).
-- The ID-keyed demographic merge (task 2.5) and demographic detection (task 2.4) live in the Data_Loader (per the design module matrix) and are prerequisites for both the active MGA (task 13) and the Respondent Demographic Profile / Table 1 (task 23.9).
+- **Multi-Group Analysis is reported as NOT ESTIMABLE for the current dataset** because per-respondent demographics are confidential and unavailable by design; hypothesis H4 is recorded as not testable (reported descriptively only). The confidentiality-status recording (task 2.4) and the NOT-ESTIMABLE report (task 13 primary deliverable) are the active MGA-related work.
+- **Property 20 (demographic category counts / percentages, task 23.10) is active** and validates Table 1 built from the published aggregate counts. **Properties 21 (ID-keyed merge, task 2.7), 22 (PLS-MGA group difference, task 13.4), and 23 (subgroup adequacy, task 13.5) are conditional and are NOT exercised for the current dataset**; they run only WHERE non-confidential per-respondent demographic data becomes available internally and is merged on `ID`.
+- Every requirement (1-26) is covered by at least one implementation task, and every correctness property (1-23) has a dedicated property-test task (P1->4.3, P2->15.3, P3->15.4, P4->8.4, P5->8.5, P6->8.6, P7->16.3, P8->17.4, P9->17.5, P10->18.3, P11->18.4, P12->10.3, P13->11.4, P14->9.4, P15->12.3, P16->20.3, P17->3.3/22.2, P18->5.4, P19->2.3, P20->23.10, P21->2.7 (conditional), P22->13.4 (conditional), P23->13.5 (conditional)).
+- The demographic detection + confidentiality-status recording (task 2.4) lives in the Data_Loader and drives the NOT-ESTIMABLE MGA report (task 13) and the Respondent Demographic Profile / Table 1 from published aggregate counts (task 23.9). The conditional ID-keyed merge (task 2.5) is a prerequisite only for the conditional MGA block (tasks 13.1-13.2) and is not exercised for the current dataset.
 - The consistency gate and `ResultsStore` are built early (task 5) because every downstream module writes to the store and reads thresholds/citations from it.
 
 ## Task Dependency Graph
@@ -377,7 +393,7 @@ graph TD
     subgraph W2[Wave 2]
         T2_2[2.2* loader tests]
         T2_3[2.3* P19]
-        T2_4[2.4 demographic detection]
+        T2_4["2.4 detection + confidentiality recording"]
         T3_2[3.2* manifest tests]
         T3_3[3.3* P17]
         T4_1[4.1 Composite_Builder]
@@ -386,7 +402,7 @@ graph TD
         T8_1[8.1 measurement loadings]
     end
     subgraph W3[Wave 3]
-        T2_5[2.5 demographic merge]
+        T2_5["2.5 demographic merge (conditional)"]
         T4_2[4.2* composite tests]
         T4_3[4.3* P1]
         T5_3[5.3* gate tests]
@@ -396,8 +412,8 @@ graph TD
         T15_1[15.1 calibration]
     end
     subgraph W4[Wave 4]
-        T2_6[2.6* merge tests]
-        T2_7[2.7* P21]
+        T2_6["2.6* merge tests (conditional)"]
+        T2_7["2.7* P21 (conditional)"]
         T7_3[7.3 normality/VIF]
         T8_3[8.3* meas tests]
         T8_4[8.4* P4]
@@ -431,14 +447,14 @@ graph TD
         T11_4[11.4* P13]
         T12_2[12.2* IPMA tests]
         T12_3[12.3* P15]
-        T13_1[13.1 MICOM invariance]
+        T13_1["13.1 MICOM invariance (conditional)"]
         T17_3[17.3* sufficiency tests]
         T17_4[17.4* P8]
         T17_5[17.5* P9]
         T18_1[18.1 configurations]
     end
     subgraph W7[Wave 7]
-        T13_2[13.2 PLS-MGA + adequacy + table]
+        T13_2["13.2 PLS-MGA + adequacy + table (conditional)"]
         T18_2[18.2* config tests]
         T18_3[18.3* P10]
         T18_4[18.4* P11]
@@ -446,9 +462,9 @@ graph TD
         T20_1[20.1 proposition table]
     end
     subgraph W8[Wave 8]
-        T13_3[13.3* MGA tests]
-        T13_4[13.4* P22]
-        T13_5[13.5* P23]
+        T13_3["13.3* MGA tests (conditional)"]
+        T13_4["13.4* P22 (conditional)"]
+        T13_5["13.5* P23 (conditional)"]
         T19_2[19.2* figure tests]
         T20_2[20.2* P1-rule test]
         T20_3[20.3* P16]
@@ -462,7 +478,7 @@ graph TD
         T23_4[23.4 discussion]
         T23_5[23.5 conclusion]
         T23_6[23.6 appendix]
-        T23_9[23.9 Table 1 profile]
+        T23_9["23.9 Table 1 from aggregate counts"]
     end
     subgraph W10[Wave 10]
         T23_7[23.7 gate wiring]
@@ -478,8 +494,8 @@ graph TD
 
     T1_1 --> T1_2 & T2_1 & T3_1 & T5_1
     T2_1 --> T4_1 & T7_1 & T8_1 & T2_4
-    T2_4 --> T2_5
-    T2_5 --> T2_6 & T2_7 & T23_9
+    T2_4 --> T2_5 & T23_9
+    T2_5 --> T2_6 & T2_7
     T5_1 --> T5_2
     T4_1 --> T15_1
     T8_1 --> T8_2
