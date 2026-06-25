@@ -1,0 +1,9 @@
+Calibration,ConsistencyCutoff,FreqCutoff,N_sufficient_configs
+primary cal,0.75,3,0
+primary cal,0.8,3,0
+primary cal,0.85,3,0
+primary cal,0.9,3,0
+percentile cal,0.75,3,0
+percentile cal,0.8,3,0
+percentile cal,0.85,3,0
+percentile cal,0.9,3,0

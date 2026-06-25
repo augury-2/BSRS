@@ -1,0 +1,7 @@
+,mean_consistency,CI2.5,CI97.5
+UE (present),0.5837,0.5326,0.636
+UE (absent),0.6108,0.5582,0.6624
+UX (present),0.5629,0.5102,0.6181
+UX (absent),0.6403,0.5935,0.69
+BSAT (present),0.5859,0.5352,0.6386
+BSAT (absent),0.6011,0.5482,0.652
