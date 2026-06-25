@@ -1,0 +1,6 @@
+Path,Beta,SE,t,p,CI2.5,CI97.5,Decision
+UE -> BSAT,-0.0367,0.0567,-0.647,0.5176,-0.1491,0.0726,Not supported
+UX -> BSAT,0.0833,0.0575,1.4485,0.1475,-0.0268,0.1952,Not supported
+UE -> BSUC,0.0367,0.0573,0.6404,0.5219,-0.0766,0.1518,Not supported
+UX -> BSUC,-0.0562,0.0552,-1.019,0.3082,-0.1626,0.0488,Not supported
+BSAT -> BSUC,0.0174,0.055,0.316,0.752,-0.0912,0.1225,Not supported

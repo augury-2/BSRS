@@ -1,0 +1,7 @@
+Condition,Consistency,Coverage,RoN,Decision
+UE (present),0.6273,0.6295,0.7306,Not necessary
+~UE (absent),0.6164,0.6156,0.7213,Not necessary
+UX (present),0.6056,0.6047,0.7157,Not necessary
+~UX (absent),0.6354,0.6377,0.735,Not necessary
+BSAT (present),0.6075,0.6165,0.7282,Not necessary
+~BSAT (absent),0.622,0.6144,0.7163,Not necessary
