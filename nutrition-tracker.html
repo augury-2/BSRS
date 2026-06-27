@@ -87,6 +87,31 @@
   .calorie-hero .big{font-size:34px; font-weight:800;}
   .calorie-hero .sub{opacity:.85; font-size:12px;}
   .calorie-hero .bar{background:rgba(255,255,255,.2); margin-top:10px; height:10px;}
+
+  /* favorites */
+  .fav-bar{display:flex; gap:6px; flex-wrap:wrap; margin:0 0 12px;}
+  .fav-chip{display:inline-flex; align-items:center; gap:6px; background:#fff7ed; border:1px solid #fed7aa; color:#9a3412; border-radius:20px; padding:5px 10px; font-size:12px; font-weight:700; cursor:pointer;}
+  .fav-chip:hover{filter:brightness(.97);}
+  .fav-chip .x{color:#dc2626; font-weight:700;}
+  .fav-empty{font-size:11px; color:var(--muted);}
+  .star-btn{flex:0 0 auto; width:46px; background:#fff7ed; color:#ea580c; border:1px solid #fed7aa; font-size:16px;}
+
+  /* water + steps */
+  .glasses{display:flex; gap:5px; flex-wrap:wrap; margin:12px 0 4px;}
+  .glass{width:24px; height:30px; border:2px solid var(--brand2); border-top:none; border-radius:0 0 7px 7px; cursor:pointer; background:#eaf6fb;}
+  .glass.full{background:linear-gradient(180deg,#0891b2,#0ea5a4);}
+  .big-num{font-size:26px; font-weight:800;}
+
+  /* measurements + chart */
+  .chart-wrap{position:relative; width:100%; margin-top:6px;}
+  canvas{width:100%; height:240px; display:block;}
+  .legend{display:flex; gap:16px; justify-content:center; font-size:12px; margin-top:6px; color:var(--muted);}
+  .legend i{display:inline-block; width:12px; height:3px; border-radius:2px; vertical-align:middle; margin-right:5px;}
+  .delta-up{color:var(--red);} .delta-down{color:var(--green);}
+  .metric-row{display:flex; gap:12px; flex-wrap:wrap; margin:12px 0;}
+  .metric{flex:1; min-width:120px; background:var(--soft); border-radius:12px; padding:12px;}
+  .metric .l{font-size:11px; color:var(--muted); text-transform:uppercase; letter-spacing:.5px;}
+  .metric .v{font-size:22px; font-weight:800;}
 </style>
 </head>
 <body>
@@ -106,6 +131,8 @@
           <button id="tabDb" class="active" onclick="switchTab('db')">From Database</button>
           <button id="tabCustom" onclick="switchTab('custom')">Custom Food</button>
         </div>
+
+        <div class="fav-bar" id="favBar"></div>
 
         <!-- DB add -->
         <div id="panelDb">
@@ -131,7 +158,10 @@
             <button class="btn-ghost btn-sm" type="button" onclick="setGrams(50)">50 g</button>
             <button class="btn-ghost btn-sm" type="button" onclick="setGrams(100)">100 g</button>
           </div>
-          <button class="btn-primary" style="width:100%; margin-top:12px;" onclick="addFromDb()">Add to Log</button>
+          <div style="display:flex; gap:8px; margin-top:12px;">
+            <button class="btn-primary" style="flex:1;" onclick="addFromDb()">Add to Log</button>
+            <button class="star-btn" title="Save food + amount as a favorite" onclick="saveFavorite()">★</button>
+          </div>
         </div>
 
         <!-- Custom add -->
@@ -222,6 +252,62 @@
     </div>
   </div>
 
+  <div class="grid" style="margin-top:18px;">
+    <!-- ============ HYDRATION & STEPS ============ -->
+    <div class="card">
+      <h2><span class="ico">💧</span> Hydration &amp; Steps</h2>
+      <div class="row">
+        <div>
+          <div class="metric" style="background:#ecfeff;">
+            <div class="l">Water</div>
+            <div><span class="big-num" id="waterNow">0</span> <span class="muted">/ <span id="waterTgt">3500</span> ml</span></div>
+            <div class="bar ok" id="waterBar" style="margin-top:8px;"><span style="width:0%"></span></div>
+          </div>
+          <div style="display:flex; gap:6px; margin-top:8px; flex-wrap:wrap;">
+            <button class="btn-ghost btn-sm" onclick="addWater(250)">+250 ml</button>
+            <button class="btn-ghost btn-sm" onclick="addWater(500)">+500 ml</button>
+            <button class="btn-ghost btn-sm" onclick="addWater(-250)">&minus;250</button>
+            <button class="btn-ghost btn-sm" onclick="setWater(0)">Reset</button>
+          </div>
+          <div class="glasses" id="glasses"></div>
+          <div class="hint">Tap a glass to set your intake (250 ml each).</div>
+        </div>
+        <div>
+          <div class="metric" style="background:#f5f3ff;">
+            <div class="l">Steps</div>
+            <div><span class="big-num" id="stepsNow">0</span> <span class="muted">/ <span id="stepsTgt">10000</span></span></div>
+            <div class="bar ok" id="stepsBar" style="margin-top:8px;"><span style="width:0%"></span></div>
+          </div>
+          <label style="margin-top:10px;">Set today's steps</label>
+          <input id="stepsInput" type="number" min="0" placeholder="e.g. 10000" onchange="setSteps(this.value)">
+          <div style="display:flex; gap:6px; margin-top:8px;">
+            <button class="btn-ghost btn-sm" onclick="addSteps(2000)">+2,000</button>
+            <button class="btn-ghost btn-sm" onclick="addSteps(5000)">+5,000</button>
+            <button class="btn-ghost btn-sm" onclick="setSteps(0)">Reset</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ WEEKLY PROGRESS ============ -->
+    <div class="card">
+      <h2><span class="ico">📈</span> Weekly Progress &mdash; Weight &amp; Waist</h2>
+      <div class="row">
+        <div><label>Date</label><input id="mDate" type="date"></div>
+        <div><label>Weight (kg)</label><input id="mWeight" type="number" step="0.1" min="0" placeholder="81.0"></div>
+        <div><label>Waist (cm)</label><input id="mWaist" type="number" step="0.1" min="0" placeholder="88.0"></div>
+      </div>
+      <button class="btn-primary btn-sm" style="margin-top:10px;" onclick="addMeasure()">Log Measurement</button>
+      <div class="metric-row" id="measureStats"></div>
+      <div class="chart-wrap"><canvas id="chart"></canvas></div>
+      <div class="legend">
+        <span><i style="background:#0ea5a4"></i>Weight (kg)</span>
+        <span><i style="background:#f97316"></i>Waist (cm)</span>
+      </div>
+      <div id="measureTable" style="margin-top:10px;"></div>
+    </div>
+  </div>
+
   <div class="footer">The Lean Machine Protocol &bull; Companion Nutrition Tracker &bull; Vegetarian recomposition</div>
 </div>
 
@@ -247,7 +333,8 @@ const NUTRIENTS = [
 
 const DEFAULT_TARGETS = {
   kcal:2100, p:190, f:60, c:200, fiber:35,
-  ca:1000, fe:14, mg:400, k:3500, na:4000, zn:11, b12:2.4, d:15, vc:90
+  ca:1000, fe:14, mg:400, k:3500, na:4000, zn:11, b12:2.4, d:15, vc:90,
+  water:3500, steps:10000
 };
 
 /* ================= FOOD DATABASE (per 100 g unless noted) ================= */
@@ -319,6 +406,16 @@ function save(k,v){ localStorage.setItem(k, JSON.stringify(v)); }
 
 // new day -> auto reset log
 if(logDate !== todayStr()){ log=[]; logDate=todayStr(); save('lmp_log_v2',log); save('lmp_logDate',logDate); }
+
+// daily water + steps (reset each new day)
+let daily = load('lmp_daily', {date:todayStr(), water:0, steps:0});
+if(daily.date !== todayStr()){ daily={date:todayStr(), water:0, steps:0}; save('lmp_daily',daily); }
+// favorites + measurements (persist across days)
+let favorites = load('lmp_favorites', []);
+let measurements = load('lmp_measure', []);
+// backfill new targets for users with older saved targets
+if(targets.water==null) targets.water=DEFAULT_TARGETS.water;
+if(targets.steps==null) targets.steps=DEFAULT_TARGETS.steps;
 
 /* ================= UI BUILD ================= */
 function initFoodList(){
@@ -462,11 +559,13 @@ function buildTargetEditor(){
   document.getElementById('targetEditor').innerHTML = `<div class="row" style="flex-wrap:wrap">${
     NUTRIENTS.map(n=>`<div style="min-width:120px"><label>${n.label} (${n.unit})</label>
       <input type="number" id="tgt_${n.key}" value="${targets[n.key]}"></div>`).join('')
-  }</div>`;
+  }<div style="min-width:120px"><label>Water (ml)</label><input type="number" id="tgt_water" value="${targets.water}"></div>
+   <div style="min-width:120px"><label>Steps</label><input type="number" id="tgt_steps" value="${targets.steps}"></div></div>`;
 }
 function saveTargets(){
   NUTRIENTS.forEach(n=>{ const v=parseFloat(document.getElementById('tgt_'+n.key).value); if(!isNaN(v)) targets[n.key]=v; });
-  save('lmp_targets',targets); render(); alert('Targets saved.');
+  ['water','steps'].forEach(k=>{ const v=parseFloat(document.getElementById('tgt_'+k).value); if(!isNaN(v)) targets[k]=v; });
+  save('lmp_targets',targets); render(); renderDaily(); alert('Targets saved.');
 }
 function resetTargets(){ targets={...DEFAULT_TARGETS}; save('lmp_targets',targets); buildTargetEditor(); render(); }
 
@@ -479,10 +578,123 @@ function exportLog(){
   navigator.clipboard?.writeText(s).then(()=>alert('Log copied to clipboard!'), ()=>prompt('Copy your log:', s));
 }
 
+/* ----- water + steps ----- */
+function renderDaily(){
+  const wt=targets.water||3500, st=targets.steps||10000;
+  document.getElementById('waterTgt').textContent=wt;
+  document.getElementById('stepsTgt').textContent=st.toLocaleString();
+  document.getElementById('waterNow').textContent=daily.water;
+  document.getElementById('stepsNow').textContent=daily.steps.toLocaleString();
+  const wb=document.getElementById('waterBar');
+  wb.className='bar '+(daily.water>=wt?'ok':daily.water>=wt*0.6?'warn':'bad');
+  wb.querySelector('span').style.width=Math.min(daily.water/wt*100,100)+'%';
+  const sb=document.getElementById('stepsBar');
+  sb.className='bar '+(daily.steps>=st?'ok':daily.steps>=st*0.6?'warn':'bad');
+  sb.querySelector('span').style.width=Math.min(daily.steps/st*100,100)+'%';
+  const g=document.getElementById('glasses');
+  const totalG=Math.ceil(wt/250), filled=Math.floor(daily.water/250);
+  let html=''; for(let i=0;i<totalG;i++){ html+=`<div class="glass ${i<filled?'full':''}" onclick="setWater(${(i+1)*250})" title="${(i+1)*250} ml"></div>`; }
+  g.innerHTML=html;
+}
+function addWater(ml){ daily.water=Math.max(0,daily.water+ml); save('lmp_daily',daily); renderDaily(); }
+function setWater(ml){ daily.water=Math.max(0,ml); save('lmp_daily',daily); renderDaily(); }
+function addSteps(n){ daily.steps=Math.max(0,daily.steps+n); save('lmp_daily',daily); renderDaily(); }
+function setSteps(n){ daily.steps=Math.max(0,parseInt(n)||0); save('lmp_daily',daily); renderDaily(); }
+
+/* ----- favorites ----- */
+function saveFavorite(){
+  const f=findFood(document.getElementById('foodSearch').value);
+  const g=parseFloat(document.getElementById('grams').value);
+  if(!f||!g||g<=0){ alert('Pick a food and amount first, then save it as a favorite.'); return; }
+  const meal=document.getElementById('meal').value;
+  if(favorites.some(x=>x.name===f.name && x.grams===g && x.meal===meal)){ alert('Already in your favorites.'); return; }
+  favorites.push({name:f.name, grams:g, meal}); save('lmp_favorites',favorites); renderFavorites();
+}
+function removeFav(i,ev){ ev.stopPropagation(); favorites.splice(i,1); save('lmp_favorites',favorites); renderFavorites(); }
+function addFav(i){
+  const fav=favorites[i], f=findFood(fav.name); if(!f) return;
+  const factor=fav.grams/100, n={}; NUTRIENTS.forEach(nu=> n[nu.key]= +((f.n[nu.key]||0)*factor).toFixed(2));
+  log.push({name:f.name, qty:fav.grams+' g', meal:fav.meal, n}); persistAndRender();
+}
+function renderFavorites(){
+  const bar=document.getElementById('favBar');
+  if(!favorites.length){ bar.innerHTML='<span class="fav-empty">★ Tip: pick a food + amount, hit the ★ to save it for one-tap logging.</span>'; return; }
+  bar.innerHTML=favorites.map((f,i)=>`<span class="fav-chip" onclick="addFav(${i})" title="Add ${f.grams} g to ${f.meal}">★ ${f.name} <span class="muted">${f.grams}g</span> <span class="x" onclick="removeFav(${i},event)">✕</span></span>`).join('');
+}
+
+/* ----- measurements + trend chart ----- */
+function addMeasure(){
+  const date=document.getElementById('mDate').value||todayStr();
+  const w=parseFloat(document.getElementById('mWeight').value);
+  const waist=parseFloat(document.getElementById('mWaist').value);
+  if(isNaN(w)&&isNaN(waist)){ alert('Enter a weight and/or waist value.'); return; }
+  measurements=measurements.filter(m=>m.date!==date);
+  measurements.push({date, weight:isNaN(w)?null:w, waist:isNaN(waist)?null:waist});
+  measurements.sort((a,b)=>a.date.localeCompare(b.date));
+  save('lmp_measure',measurements);
+  document.getElementById('mWeight').value=''; document.getElementById('mWaist').value='';
+  renderMeasurements();
+}
+function removeMeasure(i){ measurements.splice(i,1); save('lmp_measure',measurements); renderMeasurements(); }
+function renderMeasurements(){
+  const wArr=measurements.filter(m=>m.weight!=null);
+  const waArr=measurements.filter(m=>m.waist!=null);
+  function block(label,arr,key,unit){
+    if(!arr.length) return `<div class="metric"><div class="l">${label}</div><div class="v">&mdash;</div></div>`;
+    const latest=arr[arr.length-1][key], first=arr[0][key], d=latest-first;
+    const cls=d<0?'delta-down':d>0?'delta-up':'', sign=d>0?'+':'';
+    return `<div class="metric"><div class="l">${label}</div><div class="v">${latest}${unit}</div>
+      <div class="${cls}" style="font-size:12px;font-weight:700;">${arr.length>1?sign+round1(d)+unit+' total':'first entry'}</div></div>`;
+  }
+  document.getElementById('measureStats').innerHTML =
+    block('Weight',wArr,'weight',' kg') + block('Waist',waArr,'waist',' cm') +
+    `<div class="metric"><div class="l">Entries</div><div class="v">${measurements.length}</div></div>`;
+  const tbl=document.getElementById('measureTable');
+  if(!measurements.length){ tbl.innerHTML='<div class="empty">No measurements yet. Log your weekly weight &amp; waist above.</div>'; }
+  else {
+    tbl.innerHTML=`<table><thead><tr><th>Date</th><th class="num">Weight</th><th class="num">Waist</th><th></th></tr></thead><tbody>${
+      measurements.map((m,i)=>`<tr><td>${m.date}</td><td class="num">${m.weight!=null?m.weight+' kg':'&mdash;'}</td><td class="num">${m.waist!=null?m.waist+' cm':'&mdash;'}</td><td class="num"><button class="btn-danger btn-sm" onclick="removeMeasure(${i})">✕</button></td></tr>`).join('')
+    }</tbody></table>`;
+  }
+  drawChart();
+}
+function drawChart(){
+  const canvas=document.getElementById('chart'); if(!canvas) return;
+  const dpr=window.devicePixelRatio||1, cssW=canvas.clientWidth||520, cssH=240;
+  canvas.width=cssW*dpr; canvas.height=cssH*dpr;
+  const ctx=canvas.getContext('2d'); ctx.setTransform(dpr,0,0,dpr,0,0);
+  ctx.clearRect(0,0,cssW,cssH);
+  const pad={l:40,r:40,t:18,b:28}, plotW=cssW-pad.l-pad.r, plotH=cssH-pad.t-pad.b;
+  ctx.strokeStyle='#e4e8f0'; ctx.lineWidth=1; ctx.font='10px Segoe UI';
+  for(let i=0;i<=4;i++){ const y=pad.t+plotH*i/4; ctx.beginPath(); ctx.moveTo(pad.l,y); ctx.lineTo(cssW-pad.r,y); ctx.stroke(); }
+  if(!measurements.length){ ctx.fillStyle='#94a3b8'; ctx.textAlign='center'; ctx.fillText('Log measurements to see your trend',cssW/2,cssH/2); return; }
+  const n=measurements.length;
+  const xFor=i=> n===1? pad.l+plotW/2 : pad.l+plotW*i/(n-1);
+  function line(key,color){
+    const pts=measurements.map((m,i)=>({i,v:m[key]})).filter(p=>p.v!=null);
+    if(!pts.length) return;
+    const vals=pts.map(p=>p.v); let mn=Math.min(...vals), mx=Math.max(...vals);
+    if(mn===mx){ mn-=1; mx+=1; } const pd=(mx-mn)*0.15; mn-=pd; mx+=pd;
+    const yFor=v=> pad.t+plotH-(v-mn)/(mx-mn)*plotH;
+    ctx.strokeStyle=color; ctx.lineWidth=2.5; ctx.beginPath();
+    pts.forEach((p,k)=>{ const x=xFor(p.i),y=yFor(p.v); k?ctx.lineTo(x,y):ctx.moveTo(x,y); }); ctx.stroke();
+    ctx.fillStyle=color; pts.forEach(p=>{ ctx.beginPath(); ctx.arc(xFor(p.i),yFor(p.v),3.5,0,Math.PI*2); ctx.fill(); });
+  }
+  line('weight','#0ea5a4'); line('waist','#f97316');
+  ctx.fillStyle='#94a3b8'; ctx.textAlign='center';
+  ctx.fillText(measurements[0].date.slice(5), xFor(0), cssH-8);
+  if(n>1) ctx.fillText(measurements[n-1].date.slice(5), xFor(n-1), cssH-8);
+}
+
 /* init */
 initFoodList();
 buildTargetEditor();
 render();
+renderFavorites();
+renderDaily();
+document.getElementById('mDate').value = todayStr();
+renderMeasurements();
+window.addEventListener('resize', drawChart);
 </script>
 </body>
 </html>
