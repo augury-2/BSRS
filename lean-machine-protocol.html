@@ -1,0 +1,580 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>The Lean Machine Protocol</title>
+<style>
+  :root{
+    --ink:#1a1f2e; --muted:#5b6678; --line:#e4e8f0;
+    --brand:#0ea5a4; --brand2:#0891b2; --accent:#7c3aed;
+    --orange:#f97316; --green:#16a34a; --red:#dc2626; --amber:#d97706;
+    --bg-soft:#f6f8fb;
+    --push:#0e7490; --pull:#7c3aed; --legs:#ea580c;
+  }
+  *{box-sizing:border-box;}
+  html{-webkit-print-color-adjust:exact; print-color-adjust:exact;}
+  body{
+    font-family:'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+    color:var(--ink); margin:0; font-size:11px; line-height:1.5;
+  }
+  .page{padding:34px 40px;}
+  .break{page-break-before:always;}
+
+  /* ---------- COVER ---------- */
+  .cover{
+    height:100vh; display:flex; flex-direction:column; justify-content:center;
+    text-align:center;
+    background:linear-gradient(135deg,#0f172a 0%, #0e7490 55%, #0ea5a4 100%);
+    color:#fff; padding:60px; page-break-after:always; position:relative;
+  }
+  .cover::after{
+    content:""; position:absolute; inset:0;
+    background:radial-gradient(circle at 80% 20%, rgba(124,58,237,.35), transparent 45%),
+               radial-gradient(circle at 15% 85%, rgba(249,115,22,.25), transparent 40%);
+  }
+  .cover > *{position:relative; z-index:2;}
+  .cover .kicker{letter-spacing:6px; font-size:13px; opacity:.85; text-transform:uppercase;}
+  .cover h1{font-size:58px; margin:14px 0 6px; font-weight:800; line-height:1.05; text-shadow:0 4px 24px rgba(0,0,0,.3);}
+  .cover .sub{font-size:18px; opacity:.92; font-weight:300; margin-bottom:40px;}
+  .cover .stats{display:flex; gap:14px; justify-content:center; flex-wrap:wrap; margin-top:10px;}
+  .cover .stat{background:rgba(255,255,255,.12); border:1px solid rgba(255,255,255,.25);
+    border-radius:14px; padding:16px 22px; min-width:120px; backdrop-filter:blur(4px);}
+  .cover .stat .n{font-size:26px; font-weight:800; display:block;}
+  .cover .stat .l{font-size:11px; opacity:.8; letter-spacing:1px; text-transform:uppercase;}
+  .cover .foot{margin-top:46px; font-size:12px; opacity:.8;}
+
+  /* ---------- HEADINGS ---------- */
+  h2.section{
+    font-size:21px; margin:0 0 16px; padding:12px 18px; color:#fff; border-radius:10px;
+    background:linear-gradient(90deg,var(--brand2),var(--brand)); display:flex; align-items:center; gap:12px;
+  }
+  h2.section .num{background:rgba(255,255,255,.25); border-radius:8px; padding:2px 11px; font-size:16px;}
+  h3{font-size:15px; color:var(--brand2); margin:22px 0 8px; border-left:4px solid var(--brand); padding-left:10px;}
+  h3.push{color:var(--push); border-left-color:var(--push);}
+  h3.pull{color:var(--pull); border-left-color:var(--pull);}
+  h3.legs{color:var(--legs); border-left-color:var(--legs);}
+  h4{font-size:12.5px; color:var(--accent); margin:16px 0 6px;}
+  p{margin:7px 0;}
+  .lead{font-size:12px; color:var(--muted);}
+
+  /* ---------- TABLES ---------- */
+  table{width:100%; border-collapse:collapse; margin:10px 0 14px; font-size:10px; page-break-inside:avoid;}
+  th{background:linear-gradient(90deg,#0f3a46,#0e7490); color:#fff; text-align:left; padding:8px 9px; font-weight:600;}
+  td{padding:7px 9px; border-bottom:1px solid var(--line); vertical-align:top;}
+  tr:nth-child(even) td{background:var(--bg-soft);}
+  table.compact td, table.compact th{padding:5px 8px; font-size:9.5px;}
+  th.push{background:linear-gradient(90deg,#0c4a5e,#0e7490);}
+  th.pull{background:linear-gradient(90deg,#4c1d95,#7c3aed);}
+  th.legs{background:linear-gradient(90deg,#7c2d12,#ea580c);}
+
+  /* ---------- CALLOUTS ---------- */
+  .verdict{
+    background:linear-gradient(135deg,#ecfdf5,#d1fae5); border:2px solid var(--green);
+    border-radius:12px; padding:14px 18px; margin:14px 0; font-size:14px; font-weight:700; color:#065f46;
+  }
+  .verdict .big{font-size:18px; display:block; margin-top:4px;}
+  .callout{border-radius:10px; padding:12px 16px; margin:12px 0; font-size:10.5px;}
+  .callout.tip{background:#eff6ff; border-left:5px solid var(--brand2);}
+  .callout.warn{background:#fff7ed; border-left:5px solid var(--orange);}
+  .callout.key{background:#faf5ff; border-left:5px solid var(--accent);}
+  .callout .t{font-weight:700; display:block; margin-bottom:3px;}
+
+  /* ---------- BADGES ---------- */
+  .badge{display:inline-block; border-radius:20px; padding:2px 10px; font-size:9px; font-weight:700; color:#fff;}
+  .b-ess{background:var(--green);} .b-opt{background:var(--amber);} .b-rec{background:var(--brand2);}
+  .yes{color:var(--green); font-weight:700;} .no{color:var(--red); font-weight:700;}
+
+  /* ---------- CHIPS / META ---------- */
+  .profile{display:flex; flex-wrap:wrap; gap:8px; margin:12px 0;}
+  .chip{background:#fff; border:1px solid var(--line); border-radius:10px; padding:8px 12px; font-size:10px;}
+  .chip b{color:var(--brand2); display:block; font-size:13px;}
+
+  /* ---------- WEEK GRID ---------- */
+  .week{display:grid; grid-template-columns:repeat(7,1fr); gap:6px; margin:12px 0;}
+  .day{border-radius:10px; padding:10px 8px; text-align:center; color:#fff; min-height:70px;}
+  .day .d{font-size:9px; opacity:.85; letter-spacing:1px;}
+  .day .s{font-size:11px; font-weight:700; margin-top:4px;}
+  .push{background:linear-gradient(135deg,#0c4a5e,#0e7490);}
+  .pull{background:linear-gradient(135deg,#4c1d95,#7c3aed);}
+  .legs{background:linear-gradient(135deg,#7c2d12,#ea580c);}
+  .rest{background:linear-gradient(135deg,#64748b,#94a3b8);}
+
+  /* ---------- DECISION TREE ---------- */
+  .tree{margin:10px 0;}
+  .node{background:#fff; border:1px solid var(--line); border-left:5px solid var(--brand);
+    border-radius:8px; padding:9px 13px; margin:7px 0 7px 0; font-size:10px; position:relative;}
+  .node .step{display:inline-block; background:var(--brand); color:#fff; border-radius:6px;
+    padding:1px 8px; font-weight:700; margin-right:6px;}
+  .node.start{border-left-color:var(--accent);} .node.start .step{background:var(--accent);}
+  .node.warnnode{border-left-color:var(--orange);}
+  .indent{margin-left:26px;}
+
+  ul{margin:6px 0 6px 0; padding-left:20px;} li{margin:3px 0;}
+  .two{display:grid; grid-template-columns:1fr 1fr; gap:14px;}
+  .footer{text-align:center; color:var(--muted); font-size:9px; margin-top:18px; border-top:1px solid var(--line); padding-top:8px;}
+  .disclaimer{font-size:9px; color:var(--muted); font-style:italic; background:var(--bg-soft); padding:8px 12px; border-radius:8px; margin:10px 0;}
+</style>
+</head>
+<body>
+
+<!-- ============ COVER ============ -->
+<div class="cover">
+  <div class="kicker">Evidence-Based Coaching Manual</div>
+  <h1>THE LEAN<br>MACHINE PROTOCOL</h1>
+  <div class="sub">A 10-Week Body Recomposition System &mdash; Built for You</div>
+  <div class="stats">
+    <div class="stat"><span class="n">81&rarr;75</span><span class="l">kg target</span></div>
+    <div class="stat"><span class="n">~22&rarr;15</span><span class="l">% body fat</span></div>
+    <div class="stat"><span class="n">10</span><span class="l">weeks</span></div>
+    <div class="stat"><span class="n">6-Day</span><span class="l">PPL / LPP</span></div>
+  </div>
+  <div class="foot">Profile: 28 y &bull; 174 cm &bull; Advanced &bull; Vegetarian &bull; AM Training &bull; 10k steps/day</div>
+</div>
+
+<!-- ============ PAGE 1 ============ -->
+<div class="page">
+  <h2 class="section"><span class="num">1</span> The Training Split</h2>
+
+  <div class="profile">
+    <div class="chip"><b>28 yrs</b>Age</div>
+    <div class="chip"><b>174 cm</b>Height</div>
+    <div class="chip"><b>81 kg</b>Weight</div>
+    <div class="chip"><b>~22%</b>Body fat</div>
+    <div class="chip"><b>3+ yrs</b>Advanced</div>
+    <div class="chip"><b>Vegetarian</b>+ dairy/whey</div>
+    <div class="chip"><b>7&ndash;8 h</b>Sleep</div>
+    <div class="chip"><b>10,000</b>Steps/day</div>
+  </div>
+
+  <div class="verdict">✅ YOUR SPLIT:
+    <span class="big">6-Day PUSH / PULL / LEGS &nbsp;(Legs-first / LPP option included)</span>
+  </div>
+
+  <p class="lead">You chose PPL/LPP &mdash; an excellent, time-tested hypertrophy structure. Run twice through the week it delivers the key <b>2&times;/week per-muscle frequency</b> that supports muscle retention in a deficit. The trade-off vs. Upper/Lower is higher systemic fatigue across 6 days, so fatigue management (below) is non-negotiable while dieting.</p>
+
+  <h3>How PPL/LPP Stacks Up</h3>
+  <table class="compact">
+    <tr><th>Criterion</th><th>Your 6-Day PPL/LPP</th><th>Why it matters</th></tr>
+    <tr><td>Per-muscle frequency</td><td class="yes">2&times;/week</td><td>Schoenfeld 2016 meta: 2&times; beats 1&times; when volume equated &mdash; key for retaining muscle</td></tr>
+    <tr><td>MPS coverage</td><td class="yes">Every 3&ndash;4 days</td><td>Keeps muscle protein synthesis elevated; avoids the 6-day "off" gap of bro-splits</td></tr>
+    <tr><td>Volume per muscle</td><td class="yes">High, well-distributed</td><td>Split across 2 sessions = quality reps, less per-session junk volume</td></tr>
+    <tr><td>Muscle focus / specialization</td><td class="yes">Excellent</td><td>Dedicated push, pull &amp; leg days allow targeted weak-point work</td></tr>
+    <tr><td>Strength retention (deficit)</td><td>Good (keep heavy "A" days)</td><td>Heavy compounds early in each session preserve strength &amp; muscle</td></tr>
+    <tr><td>Fatigue management</td><td class="no">Needs discipline</td><td>6 days + 10k steps + deficit = high load &mdash; use the fallback if under-recovered</td></tr>
+    <tr><td>Sustainability</td><td>High if recovery is managed</td><td>Enjoyable, flexible order (PPL or LPP)</td></tr>
+  </table>
+
+  <div class="callout warn"><span class="t">About the "muscle loss" you noticed &mdash; likely NOT real muscle</span>
+  Early in a deficit, looking flatter/smaller is almost always <b>glycogen + water depletion</b> (each gram of glycogen holds ~3 g water), not lost muscle. It reverses within 24&ndash;48 h of eating carbs. <b>Judge by strength, not the mirror:</b> if your working loads &amp; reps hold week-to-week, your muscle is preserved. Even genuine losses return fast via muscle memory (retained myonuclei). Keep most carbs around training to stay full.</div>
+
+  <div class="callout key"><span class="t">Bottom line</span>
+  PPL/LPP gives you 2&times; frequency, strong volume distribution, and dedicated focus days. Keep the heavy compounds heavy, manage fatigue ruthlessly in the deficit, and it will drive recomposition just as well as Upper/Lower &mdash; with the style you prefer.</div>
+</div>
+
+<!-- ============ WEEKLY LAYOUT ============ -->
+<div class="page break">
+  <h2 class="section"><span class="num">2</span> Weekly Layout</h2>
+  <div class="week">
+    <div class="day push"><div class="d">MON</div><div class="s">Push A</div></div>
+    <div class="day pull"><div class="d">TUE</div><div class="s">Pull A</div></div>
+    <div class="day legs"><div class="d">WED</div><div class="s">Legs A</div></div>
+    <div class="day push"><div class="d">THU</div><div class="s">Push B</div></div>
+    <div class="day pull"><div class="d">FRI</div><div class="s">Pull B</div></div>
+    <div class="day legs"><div class="d">SAT</div><div class="s">Legs B</div></div>
+    <div class="day rest"><div class="d">SUN</div><div class="s">Rest</div></div>
+  </div>
+  <table class="compact">
+    <tr><th>Day</th><th>PPL order</th><th>LPP order (your preference)</th><th>Cardio / Steps</th></tr>
+    <tr><td><b>Mon</b></td><td>Push A</td><td>Legs A</td><td>10k steps PM</td></tr>
+    <tr><td><b>Tue</b></td><td>Pull A</td><td>Push A</td><td>10k steps PM</td></tr>
+    <tr><td><b>Wed</b></td><td>Legs A</td><td>Pull A</td><td>10k + optional 20-30 min LISS</td></tr>
+    <tr><td><b>Thu</b></td><td>Push B</td><td>Legs B</td><td>10k steps PM</td></tr>
+    <tr><td><b>Fri</b></td><td>Pull B</td><td>Push B</td><td>10k steps PM</td></tr>
+    <tr><td><b>Sat</b></td><td>Legs B</td><td>Pull B</td><td>10k + optional LISS</td></tr>
+    <tr><td><b>Sun</b></td><td>REST</td><td>REST</td><td>10k steps (easy)</td></tr>
+  </table>
+  <p class="lead">Same 6 sessions &mdash; just pick your starting point. "A" days lead with heavier compounds (strength-leaning); "B" days emphasize a complementary angle + more volume.</p>
+
+  <div class="callout warn"><span class="t">Fatigue fallback (use it in the deficit)</span>
+  6 training days + 10k steps on ~600 kcal deficit is high systemic load. If strength drops, sleep worsens, or joints ache, switch to a rolling <b>Push &rarr; Pull &rarr; Legs &rarr; REST &rarr; repeat</b> (1 rest every 3 sessions) or drop to 5 days. Do not grind 6 days while under-recovered.</div>
+
+  <div class="callout tip"><span class="t">Timeline reconciliation</span>
+  Diet/deficit runs the full <b>10 weeks</b>. Training is an <b>8-week mesocycle</b> (deload at Week 5), then Weeks 9&ndash;10 are a short peak/finish block.</div>
+</div>
+
+<!-- ============ WORKOUTS ============ -->
+<div class="page break">
+  <h2 class="section"><span class="num">3</span> The Workouts</h2>
+  <p class="lead"><b>Legend:</b> RPE on Reps-in-Reserve scale (RPE 8 = 2 reps left). Tempo = eccentric-pause-concentric. Sessions capped at 7 exercises to manage fatigue in the deficit.</p>
+
+  <h3 class="push">Push A &mdash; Chest Focus</h3>
+  <table class="compact">
+    <tr><th class="push">#</th><th class="push">Exercise</th><th class="push">Sets&times;Reps</th><th class="push">RPE</th><th class="push">Rest</th><th class="push">Tempo</th><th class="push">Cue / Progression</th></tr>
+    <tr><td>1</td><td>Barbell Bench Press</td><td>4&times;5-6</td><td>7&rarr;9</td><td>3 min</td><td>3-1-1</td><td>Scapula retracted, bar to lower sternum &bull; +2.5 kg</td></tr>
+    <tr><td>2</td><td>Incline DB Press (30°)</td><td>3&times;8-10</td><td>8</td><td>2 min</td><td>2-0-1</td><td>Deep stretch &bull; double progression</td></tr>
+    <tr><td>3</td><td>Seated DB Shoulder Press</td><td>3&times;8-10</td><td>8</td><td>90 s</td><td>2-0-1</td><td>Stop at ear level &bull; add reps then load</td></tr>
+    <tr><td>4</td><td>Cable Fly / Pec Deck</td><td>3&times;12-15</td><td>9</td><td>60 s</td><td>2-1-1</td><td>Stretch + squeeze &bull; add reps</td></tr>
+    <tr><td>5</td><td>Cable Lateral Raise</td><td>3&times;12-15</td><td>9</td><td>60 s</td><td>1-0-2</td><td>Lead with elbow, no shrug</td></tr>
+    <tr><td>6</td><td>Overhead Cable Triceps Ext</td><td>3&times;10-12</td><td>9</td><td>60 s</td><td>2-1-1</td><td>Long-head stretch overhead</td></tr>
+    <tr><td>7</td><td>Triceps Rope Pushdown</td><td>3&times;12-15</td><td>9</td><td>45 s</td><td>2-0-1</td><td>Elbows fixed, spread at bottom</td></tr>
+  </table>
+
+  <h3 class="pull">Pull A &mdash; Back Thickness + Biceps</h3>
+  <table class="compact">
+    <tr><th class="pull">#</th><th class="pull">Exercise</th><th class="pull">Sets&times;Reps</th><th class="pull">RPE</th><th class="pull">Rest</th><th class="pull">Tempo</th><th class="pull">Cue / Progression</th></tr>
+    <tr><td>1</td><td>Weighted Pull-up / Lat Pulldown</td><td>4&times;6-8</td><td>7&rarr;9</td><td>2.5 min</td><td>2-0-1</td><td>Lead with elbows, full stretch &bull; add reps then load</td></tr>
+    <tr><td>2</td><td>Pendlay / Chest-Supported Row</td><td>4&times;8-10</td><td>8</td><td>2 min</td><td>2-1-1</td><td>Pause at contraction &bull; double progression</td></tr>
+    <tr><td>3</td><td>Seated Cable Row</td><td>3&times;10-12</td><td>8</td><td>90 s</td><td>2-1-2</td><td>Drive elbows back, squeeze</td></tr>
+    <tr><td>4</td><td>Face Pull / Reverse Pec Deck</td><td>3&times;15-20</td><td>9</td><td>45 s</td><td>1-1-1</td><td>Pinkies up (rear delt)</td></tr>
+    <tr><td>5</td><td>EZ-Bar Curl</td><td>3&times;8-10</td><td>9</td><td>75 s</td><td>2-0-1</td><td>No swing &bull; double progression</td></tr>
+    <tr><td>6</td><td>Incline DB Curl</td><td>3&times;10-12</td><td>9</td><td>60 s</td><td>3-0-1</td><td>Full stretch behind body, supinate</td></tr>
+    <tr><td>7</td><td>Hammer Curl</td><td>2&times;12-15</td><td>9</td><td>45 s</td><td>2-0-1</td><td>Neutral grip (brachialis/forearm)</td></tr>
+  </table>
+
+  <h3 class="legs">Legs A &mdash; Quad Focus</h3>
+  <table class="compact">
+    <tr><th class="legs">#</th><th class="legs">Exercise</th><th class="legs">Sets&times;Reps</th><th class="legs">RPE</th><th class="legs">Rest</th><th class="legs">Tempo</th><th class="legs">Cue / Progression</th></tr>
+    <tr><td>1</td><td>Back Squat</td><td>4&times;5-6</td><td>7&rarr;9</td><td>3 min</td><td>3-1-1</td><td>Brace 360°, hit depth &bull; +2.5-5 kg</td></tr>
+    <tr><td>2</td><td>Leg Press</td><td>3&times;10-12</td><td>8</td><td>2 min</td><td>2-0-1</td><td>Control to ~90°, no slam</td></tr>
+    <tr><td>3</td><td>Romanian Deadlift</td><td>3&times;8-10</td><td>8</td><td>2 min</td><td>3-1-1</td><td>Push hips back, bar close</td></tr>
+    <tr><td>4</td><td>Leg Extension</td><td>3&times;12-15</td><td>10</td><td>60 s</td><td>2-1-1</td><td>1s squeeze at top</td></tr>
+    <tr><td>5</td><td>Seated Leg Curl</td><td>3&times;10-12</td><td>9</td><td>75 s</td><td>2-1-2</td><td>Slow eccentric</td></tr>
+    <tr><td>6</td><td>Standing Calf Raise</td><td>4&times;8-12</td><td>9</td><td>60 s</td><td>2-2-1</td><td>Full stretch + pause</td></tr>
+    <tr><td>7</td><td>Hanging Leg Raise</td><td>3&times;10-15</td><td>9</td><td>60 s</td><td>2-0-1</td><td>Posterior pelvic tilt</td></tr>
+  </table>
+
+  <h3 class="push">Push B &mdash; Shoulder Focus</h3>
+  <table class="compact">
+    <tr><th class="push">#</th><th class="push">Exercise</th><th class="push">Sets&times;Reps</th><th class="push">RPE</th><th class="push">Rest</th><th class="push">Tempo</th><th class="push">Cue / Progression</th></tr>
+    <tr><td>1</td><td>Overhead Press (barbell)</td><td>4&times;6-8</td><td>7&rarr;9</td><td>2.5 min</td><td>2-0-1</td><td>Brace, bar over mid-foot &bull; +2.5 kg</td></tr>
+    <tr><td>2</td><td>Incline Barbell/DB Press</td><td>3&times;8-10</td><td>8</td><td>2 min</td><td>2-1-1</td><td>Upper-chest squeeze</td></tr>
+    <tr><td>3</td><td>Machine Shoulder Press</td><td>3&times;10-12</td><td>9</td><td>90 s</td><td>2-0-1</td><td>Smooth path, no lockout rest</td></tr>
+    <tr><td>4</td><td>DB Lateral Raise</td><td>4&times;12-20</td><td>10</td><td>45 s</td><td>1-0-2</td><td>Slow lower, constant tension</td></tr>
+    <tr><td>5</td><td>Cable Fly</td><td>3&times;12-15</td><td>9</td><td>60 s</td><td>2-1-1</td><td>Deep stretch, hug</td></tr>
+    <tr><td>6</td><td>Close-Grip Bench / Dips</td><td>3&times;8-10</td><td>8</td><td>90 s</td><td>2-0-1</td><td>Elbows tucked</td></tr>
+    <tr><td>7</td><td>Triceps Pushdown</td><td>3&times;12-15</td><td>9</td><td>45 s</td><td>2-0-1</td><td>Full extension</td></tr>
+  </table>
+
+  <h3 class="pull">Pull B &mdash; Lat Width + Biceps</h3>
+  <table class="compact">
+    <tr><th class="pull">#</th><th class="pull">Exercise</th><th class="pull">Sets&times;Reps</th><th class="pull">RPE</th><th class="pull">Rest</th><th class="pull">Tempo</th><th class="pull">Cue / Progression</th></tr>
+    <tr><td>1</td><td>Wide-Grip Lat Pulldown</td><td>4&times;8-10</td><td>8</td><td>2 min</td><td>2-1-2</td><td>"Elbows to floor", lat stretch up top</td></tr>
+    <tr><td>2</td><td>Chest-Supported Row</td><td>4&times;10-12</td><td>8</td><td>90 s</td><td>2-1-1</td><td>Full stretch + squeeze</td></tr>
+    <tr><td>3</td><td>Single-Arm DB Row</td><td>3&times;10-12</td><td>9</td><td>75 s</td><td>2-0-1</td><td>Big ROM, no torso twist</td></tr>
+    <tr><td>4</td><td>Straight-Arm Pulldown</td><td>3&times;12-15</td><td>9</td><td>45 s</td><td>2-1-1</td><td>Lat isolation, arms long</td></tr>
+    <tr><td>5</td><td>Reverse Pec Deck</td><td>3&times;15-20</td><td>9</td><td>45 s</td><td>1-1-1</td><td>Rear delt, pinkies lead</td></tr>
+    <tr><td>6</td><td>Cable Curl</td><td>3&times;10-12</td><td>9</td><td>60 s</td><td>2-0-1</td><td>Constant tension</td></tr>
+    <tr><td>7</td><td>Preacher / Spider Curl</td><td>2&times;12-15</td><td>10</td><td>45 s</td><td>2-1-1</td><td>No swing, peak squeeze</td></tr>
+  </table>
+
+  <h3 class="legs">Legs B &mdash; Posterior / Glute-Ham Focus</h3>
+  <table class="compact">
+    <tr><th class="legs">#</th><th class="legs">Exercise</th><th class="legs">Sets&times;Reps</th><th class="legs">RPE</th><th class="legs">Rest</th><th class="legs">Tempo</th><th class="legs">Cue / Progression</th></tr>
+    <tr><td>1</td><td>Romanian Deadlift / Hip Thrust</td><td>4&times;8-10</td><td>8</td><td>2.5 min</td><td>3-1-1</td><td>Hinge / full glute lockout</td></tr>
+    <tr><td>2</td><td>Hack Squat / Pendulum</td><td>3&times;10-12</td><td>8</td><td>2 min</td><td>3-1-1</td><td>Deep ROM, quads loaded</td></tr>
+    <tr><td>3</td><td>Bulgarian Split Squat</td><td>3&times;10-12/leg</td><td>9</td><td>75 s</td><td>2-0-1</td><td>Slight torso lean, front-leg drive</td></tr>
+    <tr><td>4</td><td>Lying Leg Curl</td><td>3&times;12-15</td><td>9</td><td>60 s</td><td>2-1-2</td><td>No hip rise</td></tr>
+    <tr><td>5</td><td>Seated Leg Curl</td><td>3&times;12-15</td><td>9</td><td>60 s</td><td>2-1-2</td><td>Point toes, full squeeze</td></tr>
+    <tr><td>6</td><td>Seated Calf Raise</td><td>4&times;12-15</td><td>9</td><td>45 s</td><td>2-2-1</td><td>Soleus focus</td></tr>
+    <tr><td>7</td><td>Cable Crunch</td><td>3&times;12-15</td><td>9</td><td>45 s</td><td>2-1-2</td><td>Round spine, hips fixed</td></tr>
+  </table>
+</div>
+
+<!-- ============ VOLUME ============ -->
+<div class="page break">
+  <h2 class="section"><span class="num">4</span> Weekly Volume vs. Evidence</h2>
+  <p class="lead">Hard sets/week (direct + meaningful indirect) across the 6-day PPL/LPP. Anchor: Schoenfeld 2017 dose-response &mdash; 10+ sets/muscle/week drives growth; in a deficit, sit near the lower-effective end (MEV&ndash;MAV) to preserve muscle without exceeding recovery.</p>
+  <table class="compact">
+    <tr><th>Muscle</th><th>Your Sets/wk</th><th>Evidence Target</th><th>Verdict</th></tr>
+    <tr><td>Chest</td><td>13-15</td><td>10-18</td><td class="yes">✅ Optimal</td></tr>
+    <tr><td>Back (overall)</td><td>15-18</td><td>12-20</td><td class="yes">✅ Optimal</td></tr>
+    <tr><td>Lats</td><td>9-11</td><td>8-14</td><td class="yes">✅ Good</td></tr>
+    <tr><td>Upper back</td><td>6-8</td><td>6-12</td><td class="yes">✅ Good</td></tr>
+    <tr><td>Front delts</td><td>9-11</td><td>6-12</td><td class="yes">✅ Covered by pressing</td></tr>
+    <tr><td>Lateral delts</td><td>10-13</td><td>12-22</td><td class="yes">✅ Solid</td></tr>
+    <tr><td>Rear delts</td><td>6-8</td><td>6-12</td><td class="yes">✅ Good</td></tr>
+    <tr><td>Biceps</td><td>10-13</td><td>8-16</td><td class="yes">✅ Optimal</td></tr>
+    <tr><td>Triceps</td><td>11-14</td><td>10-16</td><td class="yes">✅ Optimal</td></tr>
+    <tr><td>Forearms</td><td>grip + 2-4</td><td>4-10</td><td class="yes">✅ Adequate</td></tr>
+    <tr><td>Quads</td><td>11-13</td><td>10-18</td><td class="yes">✅ Optimal</td></tr>
+    <tr><td>Hamstrings</td><td>9-11</td><td>8-16</td><td class="yes">✅ Optimal</td></tr>
+    <tr><td>Glutes</td><td>8-10</td><td>6-16</td><td class="yes">✅ Good</td></tr>
+    <tr><td>Calves</td><td>8-11</td><td>10-20</td><td class="yes">✅ Good</td></tr>
+    <tr><td>Abs</td><td>6-9</td><td>6-16</td><td class="yes">✅ Good</td></tr>
+  </table>
+  <div class="callout key"><span class="t">Read-out</span>
+  Every muscle is trained 2&times;/week and sits at or above the 10-set growth threshold while staying within recoverable range for a dieting advanced lifter. Heavy compounds lead each session to protect strength &mdash; the #1 signal for keeping muscle in a deficit.</div>
+
+  <h2 class="section break"><span class="num">5</span> Progressive Overload (8 + 2 Weeks)</h2>
+  <p class="lead">Core method = <b>Double Progression with RPE auto-regulation.</b> Add reps within a range until you top it on all sets, then add load (2.5 kg upper / 2.5&ndash;5 kg lower) and drop to the bottom.</p>
+  <table class="compact">
+    <tr><th>Week</th><th>Phase</th><th>Intensity (RPE)</th><th>Volume</th><th>Action</th></tr>
+    <tr><td>1</td><td>Accumulation 1</td><td>7 (3 RIR)</td><td>Base</td><td>Establish loads, perfect technique</td></tr>
+    <tr><td>2</td><td>Accumulation 1</td><td>8 (2 RIR)</td><td>Base</td><td>Add reps across sets</td></tr>
+    <tr><td>3</td><td>Accumulation 1</td><td>8-9</td><td>+1 set lagging</td><td>Add reps; load up where maxed</td></tr>
+    <tr><td>4</td><td>Accumulation peak</td><td>9 (1 RIR)</td><td>Peak</td><td>Push compounds to top of range</td></tr>
+    <tr style="background:#fff7ed;"><td><b>5</b></td><td><b>DELOAD</b></td><td>5-6 (-40-50% load)</td><td>Half</td><td>Recover, movement quality, refeed</td></tr>
+    <tr><td>6</td><td>Intensification</td><td>8</td><td>Base</td><td>Reset heavier than W3, rebuild reps</td></tr>
+    <tr><td>7</td><td>Intensification</td><td>8-9</td><td>+1 set lagging</td><td>Add reps/load</td></tr>
+    <tr><td>8</td><td>Intensification peak</td><td>9 (1 RIR)</td><td>Peak</td><td>Top-set PRs where possible</td></tr>
+    <tr><td>9</td><td>Peak / Maintain</td><td>8-9</td><td>Slightly reduced</td><td>Hold strength, maximize definition</td></tr>
+    <tr><td>10</td><td>Peak / Finish</td><td>7-8 (taper)</td><td>Reduced</td><td>Maintain intensity, drop junk volume</td></tr>
+  </table>
+  <div class="callout warn"><span class="t">In a deficit, success = MAINTAINING loads, not weekly PRs</span>
+  Holding your numbers while losing 5&ndash;7 kg means you're getting relatively stronger and preserving muscle. That IS progress.</div>
+</div>
+
+<!-- ============ NUTRITION ============ -->
+<div class="page break">
+  <h2 class="section"><span class="num">6</span> Nutrition</h2>
+
+  <h3>Maintenance Calories &mdash; Method Comparison</h3>
+  <div class="two">
+    <div>
+      <table class="compact">
+        <tr><th>Method</th><th>BMR</th><th>&times;1.55</th></tr>
+        <tr><td>Mifflin-St Jeor</td><td>1,763</td><td><b>~2,730</b></td></tr>
+        <tr><td>Katch-McArdle (22% BF)</td><td>1,735</td><td><b>~2,690</b></td></tr>
+      </table>
+    </div>
+    <div>
+      <table class="compact">
+        <tr><th>BF</th><th>LBM</th><th>Katch BMR</th></tr>
+        <tr><td>20%</td><td>64.8 kg</td><td>1,770</td></tr>
+        <tr><td>22%</td><td>63.2 kg</td><td>1,735</td></tr>
+        <tr><td>25%</td><td>60.8 kg</td><td>1,682</td></tr>
+      </table>
+    </div>
+  </div>
+  <div class="verdict" style="font-size:13px;">🎯 Maintenance ≈ <span style="color:#0e7490;">2,700 kcal/day</span>
+    <span style="display:block;font-size:10px;font-weight:400;margin-top:4px;color:#065f46;">Activity &times;1.55 (6 lifts + 10k steps + active life). Both methods agree &rarr; high confidence. Verify against 2-week weight trend.</span>
+  </div>
+
+  <h3>Fat-Loss Calories</h3>
+  <table class="compact">
+    <tr><th>Approach</th><th>Deficit</th><th>Intake</th><th>Loss/wk</th><th>Muscle risk</th></tr>
+    <tr><td>Moderate</td><td>-15% (-400)</td><td>2,300</td><td>~0.4 kg</td><td>Very low (too slow)</td></tr>
+    <tr style="background:#ecfdf5;"><td><b>Moderate-Aggressive ✅</b></td><td><b>-22% (-600)</b></td><td><b>2,100</b></td><td><b>~0.6 kg</b></td><td><b>Low</b></td></tr>
+    <tr><td>Aggressive</td><td>-30% (-800)</td><td>1,900</td><td>~0.8 kg</td><td>Moderate-high</td></tr>
+  </table>
+  <div class="callout tip"><span class="t">Chosen: ~2,100 kcal/day</span>
+  Helms 2014 / Garthe 2011: ~0.5&ndash;0.7%/week BW loss maximizes fat loss while sparing muscle. ~0.6 kg/wk &times; 10 wks = ~6 kg &rarr; ~75 kg, landing in target while moderate enough (with high protein + heavy lifting) to protect muscle.</div>
+
+  <h3>Macronutrients @ 2,100 kcal</h3>
+  <table class="compact">
+    <tr><th>Macro</th><th>Amount</th><th>g/kg</th><th>kcal</th><th>%</th><th>Rationale</th></tr>
+    <tr><td><b>Protein</b></td><td>190 g</td><td>2.35</td><td>760</td><td>36%</td><td>Helms: 2.3-3.1 g/kg LBM in deficit; preserves muscle + satiety</td></tr>
+    <tr><td><b>Fat</b></td><td>60 g</td><td>0.74</td><td>540</td><td>26%</td><td>Hormones, joints, EFAs</td></tr>
+    <tr><td><b>Carbs</b></td><td>200 g</td><td>2.5</td><td>800</td><td>38%</td><td>Training performance + recovery (keep most around training!)</td></tr>
+    <tr><td><b>Fiber</b></td><td>30-40 g</td><td>&mdash;</td><td>&mdash;</td><td>&mdash;</td><td>Satiety, gut health</td></tr>
+  </table>
+
+  <h4>Hydration &amp; Electrolytes</h4>
+  <table class="compact">
+    <tr><th>Water</th><th>Sodium</th><th>Potassium</th><th>Magnesium</th></tr>
+    <tr><td>3-3.5 L/day</td><td>3,000-4,500 mg</td><td>3,500-4,700 mg</td><td>350-400 mg</td></tr>
+  </table>
+
+  <h4>Protein Distribution &amp; Timing</h4>
+  <ul>
+    <li><b>5 meals</b>, every 3-4 h &mdash; ~0.4 g/kg/meal (Schoenfeld &amp; Aragon 2018) maximizes daily MPS.</li>
+    <li><b>35-45 g/meal</b> (≥3 g leucine to cross the leucine threshold).</li>
+    <li><b>Pre-WO (AM):</b> ~25 g whey ± banana. <b>Post-WO:</b> ~40 g protein + carbs within 1-2 h.</li>
+    <li><b>Before bed:</b> ~30-40 g slow protein (paneer/Greek yogurt/milk) &mdash; Res 2012, overnight MPS.</li>
+  </ul>
+</div>
+
+<!-- ============ MEAL PLAN ============ -->
+<div class="page break">
+  <h2 class="section"><span class="num">7</span> Vegetarian Meal Plan</h2>
+  <p class="lead">Sample Day &mdash; ~2,100 kcal | ~188 P / 58 F / 200 C</p>
+  <table class="compact">
+    <tr><th>Meal / Time</th><th>Foods &amp; Portions</th><th>P</th><th>F</th><th>C</th><th>kcal</th></tr>
+    <tr><td><b>Pre-WO 6:00</b></td><td>1 scoop whey + black coffee</td><td>24</td><td>2</td><td>2</td><td>120</td></tr>
+    <tr><td><b>Breakfast 8:30</b></td><td>50 g oats + 1 scoop whey + 150 g berries + 150 ml skim milk</td><td>40</td><td>7</td><td>55</td><td>430</td></tr>
+    <tr><td><b>Lunch 1:00</b></td><td>150 g tofu (or 120 g low-fat paneer) + 1 cup dal + 120 g rice + veg (1 tsp oil) + salad</td><td>33</td><td>16</td><td>65</td><td>540</td></tr>
+    <tr><td><b>Snack 4:30</b></td><td>200 g low-fat Greek yogurt + 15 g almonds</td><td>24</td><td>12</td><td>12</td><td>250</td></tr>
+    <tr><td><b>Dinner 8:00</b></td><td>55-60 g dry soya chunks (cooked) + 2 wheat rotis + large veg (1 tsp oil) + salad</td><td>39</td><td>11</td><td>56</td><td>480</td></tr>
+    <tr><td><b>Bed 10:00</b></td><td>100 g low-fat paneer or 200 g Greek yogurt</td><td>18</td><td>8</td><td>6</td><td>160</td></tr>
+    <tr style="background:#ecfdf5;font-weight:700;"><td>TOTAL</td><td>If short on protein, add ½ scoop whey (+12 P)</td><td>~188</td><td>~56</td><td>~196</td><td>~2,000-2,100</td></tr>
+  </table>
+
+  <div class="two">
+    <div>
+      <h4>Meal Alternatives</h4>
+      <table class="compact">
+        <tr><th>Role</th><th>Options</th></tr>
+        <tr><td>Lean protein</td><td>Paneer, tofu, soya, tempeh, Greek yogurt, whey, skim milk</td></tr>
+        <tr><td>Legumes</td><td>Dal, rajma, chickpeas, beans, moong</td></tr>
+        <tr><td>Carbs</td><td>Oats, rice, roti, potato, sweet potato, fruit, quinoa</td></tr>
+        <tr><td>Fats</td><td>Almonds, walnuts, chia/flax, peanut butter, ghee/olive oil</td></tr>
+        <tr><td>Veg</td><td>Spinach, broccoli, capsicum, bhindi, cauliflower</td></tr>
+      </table>
+    </div>
+    <div>
+      <h4>Budget Swaps</h4>
+      <table class="compact">
+        <tr><th>Premium</th><th>Budget</th></tr>
+        <tr><td>Tofu/tempeh</td><td>Soya chunks (cheapest)</td></tr>
+        <tr><td>Greek yogurt</td><td>Hung curd</td></tr>
+        <tr><td>Whey isolate</td><td>Whey concentrate / milk+paneer</td></tr>
+        <tr><td>Almonds</td><td>Peanuts / roasted chana</td></tr>
+        <tr><td>Berries</td><td>Banana, papaya, seasonal fruit</td></tr>
+        <tr><td>Low-fat paneer</td><td>Homemade from toned milk</td></tr>
+      </table>
+    </div>
+  </div>
+  <div class="callout tip"><span class="t">Use the companion Nutrition Tracker</span>
+  Log your real meals in the interactive <b>nutrition-tracker.html</b> app to auto-sum calories, macros, fiber and key micros (calcium, iron, sodium, potassium, magnesium, B12, D) against these targets.</div>
+</div>
+
+<!-- ============ SUPPLEMENTS + CARDIO ============ -->
+<div class="page break">
+  <h2 class="section"><span class="num">8</span> Supplements</h2>
+  <table class="compact">
+    <tr><th>Supplement</th><th>Status</th><th>Dose</th><th>Timing</th><th>Why</th></tr>
+    <tr><td>Creatine Monohydrate</td><td><span class="badge b-ess">ESSENTIAL</span></td><td>5 g/day</td><td>Any time, daily</td><td>Strongest evidence; vegetarians respond more</td></tr>
+    <tr><td>Whey Protein</td><td><span class="badge b-ess">ESSENTIAL</span></td><td>1-2 scoops</td><td>Pre/post WO</td><td>Convenient complete protein to hit 190 g</td></tr>
+    <tr><td>Vitamin B12</td><td><span class="badge b-ess">ESSENTIAL</span></td><td>250-500 mcg/day</td><td>With food</td><td>Not reliable in veg diet; nerves/blood/energy</td></tr>
+    <tr><td>Vitamin D3 (lichen)</td><td><span class="badge b-ess">ESSENTIAL</span></td><td>1,000-2,000 IU</td><td>With fatty meal</td><td>Common deficiency; bone/immune/performance</td></tr>
+    <tr><td>Omega-3 (Algae EPA/DHA)</td><td><span class="badge b-rec">RECOMMENDED</span></td><td>0.5-1 g EPA+DHA</td><td>With food</td><td>Veg diets low in EPA/DHA; recovery/joints/heart</td></tr>
+    <tr><td>Magnesium</td><td><span class="badge b-opt">OPTIONAL</span></td><td>200-400 mg</td><td>Evening</td><td>Often low in deficit; sleep/muscle</td></tr>
+    <tr><td>Electrolytes</td><td><span class="badge b-opt">OPTIONAL</span></td><td>As needed</td><td>Around training</td><td>High steps + sweat + low-sodium veg diet</td></tr>
+    <tr><td>Caffeine</td><td><span class="badge b-opt">OPTIONAL</span></td><td>3-6 mg/kg</td><td>30-45 min pre-WO</td><td>Performance, focus, appetite blunting</td></tr>
+    <tr><td>Citrulline Malate</td><td><span class="badge b-opt">OPTIONAL</span></td><td>6-8 g</td><td>Pre-WO</td><td>Modest pump/endurance</td></tr>
+    <tr><td>Beta-Alanine</td><td><span class="badge b-opt">OPTIONAL</span></td><td>3-5 g/day</td><td>Any time, daily</td><td>Helps 60-240 s high-rep efforts</td></tr>
+  </table>
+  <div class="callout key"><span class="t">Verdict</span> Essentials = Creatine, B12, D3, whey (practical), algae omega-3. Everything else is optional polish. No fat burners &mdash; they don't move the needle.</div>
+
+  <h2 class="section"><span class="num">9</span> Cardio</h2>
+  <table class="compact">
+    <tr><th>Modality</th><th>Fat loss</th><th>Muscle/recovery cost</th><th>Verdict</th></tr>
+    <tr><td>Walking (NEAT)</td><td>High</td><td>Negligible</td><td class="yes">✅ Keep 10k steps — your best tool</td></tr>
+    <tr><td>Incline treadmill (LISS)</td><td>High</td><td>Low</td><td class="yes">✅ Primary structured cardio</td></tr>
+    <tr><td>Cycling (LISS)</td><td>Good</td><td>Low</td><td class="yes">✅ Good alternative</td></tr>
+    <tr><td>HIIT</td><td>High/min</td><td>High</td><td class="no">🟡 Max 1×/wk, away from leg days</td></tr>
+  </table>
+  <ul>
+    <li><b>Keep your 10,000 evening steps</b> &mdash; non-negotiable, your single best fat-loss tool. With 6 lifting days, do NOT add much structured cardio &mdash; let steps + the deficit do the work.</li>
+    <li><b>Add at most 1-2 LISS</b> sessions if fat loss stalls. Skip HIIT unless recovery is excellent (it competes with 6-day lifting).</li>
+    <li><b>Fasted cardio not superior</b> (Schoenfeld 2014, matched calories). Walking fasted is fine; for lifting take ~25 g whey first.</li>
+  </ul>
+</div>
+
+<!-- ============ RECOVERY + TRACKING ============ -->
+<div class="page break">
+  <h2 class="section"><span class="num">10</span> Recovery</h2>
+  <div class="two">
+    <div>
+      <h4>Sleep (biggest recovery lever)</h4>
+      <ul><li>Target 7.5-9 h; push toward 8+. Critical with 6 training days.</li><li>Fixed times, dark/cool room (~18-20°C), no screens 60 min prior, cap caffeine early.</li></ul>
+      <h4>Warm-Up (RAMP, 8-10 min)</h4>
+      <ul><li>3-5 min easy cardio</li><li>Dynamic mobility for the day's joints</li><li>2-3 ramp-up sets on first compound</li></ul>
+      <h4>Cool-Down</h4>
+      <ul><li>5 min easy walk + nasal breathing + light static stretch</li></ul>
+    </div>
+    <div>
+      <h4>Mobility (10 min, 3×/wk)</h4>
+      <ul><li>Hip flexor, 90/90, deep squat hold, T-spine rotations, shoulder dislocates, hamstring/calf stretch</li></ul>
+      <h4>Foam Rolling</h4>
+      <ul><li>Pre-training, tight areas 30-60 s each (warm-up adjunct)</li></ul>
+      <h4>Stress</h4>
+      <ul><li>10 min/day decompression &mdash; chronic stress + deficit = high cortisol, water retention masking fat loss</li></ul>
+    </div>
+  </div>
+  <table class="compact">
+    <tr><th style="background:linear-gradient(90deg,#166534,#16a34a);">🟢 Recovering Well</th><th style="background:linear-gradient(90deg,#991b1b,#dc2626);">🔴 Back Off / Deload</th></tr>
+    <tr><td>Stable/rising lifts; good sleep; normal RHR; steady mood; normal appetite</td><td>Strength dropping 2 sessions; RHR +5-10 bpm; poor sleep; persistent fatigue; joint aches; soreness >3 days</td></tr>
+  </table>
+
+  <h2 class="section"><span class="num">11</span> Tracking</h2>
+  <table class="compact">
+    <tr><th>Metric</th><th>How</th><th>Frequency</th></tr>
+    <tr><td>Body weight</td><td>Same time AM, fasted; record 7-day average</td><td>Daily &rarr; weekly avg</td></tr>
+    <tr><td>Waist</td><td>Tape at navel, relaxed, AM fasted</td><td>Weekly</td></tr>
+    <tr><td>Photos</td><td>Front/side/back, same lighting/poses</td><td>Weekly</td></tr>
+    <tr><td>Strength</td><td>Log load &times; reps &times; RPE (your true muscle-retention marker)</td><td>Every session</td></tr>
+    <tr><td>Body fat %</td><td>Calipers or visual vs. photos</td><td>Every 2-3 weeks</td></tr>
+    <tr><td>Nutrition</td><td>Log meals in the interactive tracker (macros + micros)</td><td>Daily</td></tr>
+  </table>
+  <div class="callout warn"><span class="t">Calorie adjustment rule</span>
+  Compare weekly averages. Losing 0.4-0.7 kg/wk &rarr; change nothing. &gt;0.8 kg/wk for 2 wks &rarr; +150 kcal. &lt;0.3 kg/wk for 2 wks &rarr; go to plateau tree. Waist + photos override the scale.</div>
+</div>
+
+<!-- ============ PLATEAU ============ -->
+<div class="page break">
+  <h2 class="section"><span class="num">12</span> Plateau Strategy</h2>
+  <p class="lead">Confirm a real stall first: weekly <b>average</b> weight flat for 2 weeks AND waist + photos unchanged. Water retention often masks fat loss for 1-2 weeks &mdash; don't panic early.</p>
+  <div class="tree">
+    <div class="node start"><span class="step">START</span> Real stall confirmed (2 wks: weight + waist + photos all flat)</div>
+    <div class="node warnnode"><span class="step">1</span> <b>AUDIT FIRST</b> &mdash; re-log food 3 days honestly (portion creep!). Hitting steps + sleep + protein? Fix adherence before changing the plan. <i>Most "plateaus" are this.</i></div>
+    <div class="node indent"><span class="step">2</span> <b>↑ NEAT</b> &mdash; 10k &rarr; 12k steps or +1 LISS. Lowest cost to recovery; preserves muscle.</div>
+    <div class="node indent"><span class="step">3</span> <b>↓ Calories</b> modestly &mdash; cut ~150 kcal from carbs/fat (never protein). 2,100 &rarr; ~1,950.</div>
+    <div class="node indent"><span class="step">4</span> <b>+ Cardio</b> &mdash; add 1 LISS session (20-30 min). Keep HIIT ≤1×/wk.</div>
+    <div class="node indent"><span class="step">5</span> <b>Check training</b> &mdash; if fatigued, REDUCE junk volume / use the 5-day fallback. Fatigue ≠ fat loss.</div>
+    <div class="node indent"><span class="step">6</span> <b>Refeed / Diet break</b> &mdash; 1-2 days (or 7-14 days) at maintenance to restore leptin/performance &amp; restart fat loss (Byrne 2018 MATADOR).</div>
+    <div class="node"><span class="step">↻</span> Re-evaluate after 2 weeks &rarr; repeat from top if needed.</div>
+  </div>
+  <div class="callout key"><span class="t">Golden rules</span> Protein and lifting intensity are the LAST things you cut. Move NEAT/cardio and small calorie nudges first. A planned refeed/diet break is a tool, not a failure.</div>
+
+  <h2 class="section"><span class="num">13</span> Expected Results (10 Weeks)</h2>
+  <table class="compact">
+    <tr><th>Metric</th><th>Start</th><th>Realistic Outcome</th><th>Notes</th></tr>
+    <tr><td>Body weight</td><td>81 kg</td><td><b>74-76 kg</b> (-5 to -7)</td><td>~0.6 kg/wk</td></tr>
+    <tr><td>Body fat %</td><td>~22%</td><td><b>~14-16%</b></td><td>Visible abs, separation</td></tr>
+    <tr><td>Fat mass</td><td>~18 kg</td><td><b>~11-12 kg</b> (-6 to -7)</td><td>Bulk of the loss</td></tr>
+    <tr><td>Lean body mass</td><td>~63 kg</td><td><b>maintain ± small gain</b></td><td>Preserve = the win</td></tr>
+    <tr><td>Waist</td><td>baseline</td><td><b>-5 to -8 cm</b></td><td>Strongest visual change</td></tr>
+    <tr><td>Strength</td><td>baseline</td><td><b>Maintained</b></td><td>Holding loads = success</td></tr>
+    <tr><td>Appearance</td><td>soft ~22%</td><td><b>Lean, athletic, vascular, defined</b></td><td>Dramatic visual transformation</td></tr>
+  </table>
+  <div class="callout tip"><span class="t">The honest truth</span>
+  As an advanced lifter in a deficit, large simultaneous muscle gain is unlikely (that's a beginner phenomenon). Your excellent, achievable outcome: lose ~6-7 kg fat, preserve essentially all muscle, possibly add a little. Far leaner &rarr; you'll LOOK much more muscular as hidden muscle becomes visible. 100% achievable naturally.</div>
+</div>
+
+<!-- ============ CHECKLISTS ============ -->
+<div class="page break">
+  <h2 class="section"><span class="num">14</span> Quick-Start Checklists</h2>
+  <div class="two">
+    <div>
+      <h4>Daily ✅</h4>
+      <ul>
+        <li>~2,100 kcal / ~190 g protein</li>
+        <li>5 protein-spread meals (incl. pre-bed slow protein)</li>
+        <li>3-3.5 L water + salt food</li>
+        <li>10,000 steps</li>
+        <li>Creatine 5 g + B12 + D3 + algae omega-3</li>
+        <li>7.5-9 h sleep</li>
+        <li>Log workout (load × reps × RPE)</li>
+        <li>Log meals in the nutrition tracker</li>
+      </ul>
+    </div>
+    <div>
+      <h4>Weekly ✅</h4>
+      <ul>
+        <li>6 sessions: Push/Pull/Legs ×2 (or 5-day fallback)</li>
+        <li>Steps daily; LISS only if needed</li>
+        <li>Weigh-in: 7-day average</li>
+        <li>Waist + progress photos</li>
+        <li>Review: strength holding? losing ~0.6 kg? adjust</li>
+        <li>Mobility 3× + recovery check</li>
+      </ul>
+    </div>
+  </div>
+  <h4>Phase Milestones ✅</h4>
+  <ul>
+    <li><b>Week 5:</b> Deload (light, recover, refeed)</li>
+    <li><b>Weeks 6-8:</b> Intensification &mdash; chase rep/load PRs where recovery allows</li>
+    <li><b>Weeks 9-10:</b> Peak/finish &mdash; maintain intensity, trim junk volume, lock in the lean look</li>
+  </ul>
+
+  <div class="callout key" style="margin-top:20px;"><span class="t">Your complete protocol</span>
+  Single, fully-optimized plan for your 174 cm / 81 kg advanced vegetarian profile, morning training, high step count, and 10-week lean-out goal &mdash; now on the 6-day PPL/LPP structure you prefer. Execute the levers in order, judge muscle retention by STRENGTH not the mirror, keep the heavy work heavy, and protect sleep + protein above all. 15% body fat at ~75 kg is well within reach.</div>
+
+  <div class="disclaimer">This document provides general evidence-based fitness and nutrition information, not personalized medical advice. As a long-term vegetarian entering a sustained deficit, consider a baseline blood panel (vitamin D, B12, ferritin, lipids) and consult a qualified professional before making significant changes.</div>
+
+  <div class="footer">THE LEAN MACHINE PROTOCOL &bull; 10-Week Body Recomposition System &bull; 6-Day PPL/LPP &bull; Built to your profile</div>
+</div>
+
+</body>
+</html>
