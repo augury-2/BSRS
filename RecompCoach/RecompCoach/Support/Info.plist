@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>CFBundleDisplayName</key>
+    <string>RecompCoach</string>
+    <key>CFBundleShortVersionString</key>
+    <string>$(MARKETING_VERSION)</string>
+    <key>CFBundleVersion</key>
+    <string>$(CURRENT_PROJECT_VERSION)</string>
+    <key>UILaunchScreen</key>
+    <dict/>
+    <key>UISupportedInterfaceOrientations</key>
+    <array>
+        <string>UIInterfaceOrientationPortrait</string>
+    </array>
+
+    <!-- HealthKit usage descriptions (required) -->
+    <key>NSHealthShareUsageDescription</key>
+    <string>RecompCoach reads your steps, walking distance, and active energy to show your daily activity and estimate calories burned. This stays on your device unless you enable sync.</string>
+    <key>NSHealthUpdateUsageDescription</key>
+    <string>RecompCoach can save workouts you log so your Health activity stays accurate.</string>
+
+    <key>NSMotionUsageDescription</key>
+    <string>Used as a fallback to estimate steps when Health data is unavailable.</string>
+
+    <!-- Optional background sync -->
+    <key>UIBackgroundModes</key>
+    <array>
+        <string>fetch</string>
+        <string>processing</string>
+    </array>
+    <key>BGTaskSchedulerPermittedIdentifiers</key>
+    <array>
+        <string>app.recompcoach.sync</string>
+    </array>
+</dict>
+</plist>
