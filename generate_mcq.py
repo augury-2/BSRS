@@ -298,7 +298,7 @@ QUESTIONS = [
 ]
 
 
-def build_pdf(output_path):
+def build_pdf(output_path, include_answer_key=True):
     import random
     rng = random.Random(42)  # deterministic shuffle for reproducibility
 
@@ -364,7 +364,7 @@ def build_pdf(output_path):
     story.append(Paragraph(
         "<b>Instructions:</b> Each question carries one mark. "
         "Choose the single best answer (A, B, C or D) for each question. "
-        "There is no negative marking. An answer key is provided at the end of the paper.",
+        "There is no negative marking.",
         instr_style))
     story.append(Spacer(1, 8))
 
@@ -374,33 +374,34 @@ def build_pdf(output_path):
         for j, opt in enumerate(opts):
             story.append(Paragraph(f"({letters[j]}) {opt}", opt_style))
 
-    # Answer key
-    story.append(PageBreak())
-    story.append(Paragraph("ANSWER KEY", section_style))
-    story.append(Spacer(1, 4))
+    # Answer key (optional)
+    if include_answer_key:
+        story.append(PageBreak())
+        story.append(Paragraph("ANSWER KEY", section_style))
+        story.append(Spacer(1, 4))
 
-    key_rows = []
-    row = []
-    for i, (_, _, ans) in enumerate(shuffled, start=1):
-        row.append(f"{i}. {letters[ans]}")
-        if len(row) == 5:
+        key_rows = []
+        row = []
+        for i, (_, _, ans) in enumerate(shuffled, start=1):
+            row.append(f"{i}. {letters[ans]}")
+            if len(row) == 5:
+                key_rows.append(row)
+                row = []
+        if row:
+            while len(row) < 5:
+                row.append("")
             key_rows.append(row)
-            row = []
-    if row:
-        while len(row) < 5:
-            row.append("")
-        key_rows.append(row)
 
-    key_tbl = Table(key_rows, colWidths=[34 * mm] * 5)
-    key_tbl.setStyle(TableStyle([
-        ("FONTSIZE", (0, 0), (-1, -1), 9.5),
-        ("GRID", (0, 0), (-1, -1), 0.4, colors.HexColor("#9bb4d4")),
-        ("TOPPADDING", (0, 0), (-1, -1), 4),
-        ("BOTTOMPADDING", (0, 0), (-1, -1), 4),
-        ("BACKGROUND", (0, 0), (-1, -1), colors.HexColor("#f3f6fb")),
-        ("TEXTCOLOR", (0, 0), (-1, -1), colors.HexColor("#1a3c6e")),
-    ]))
-    story.append(key_tbl)
+        key_tbl = Table(key_rows, colWidths=[34 * mm] * 5)
+        key_tbl.setStyle(TableStyle([
+            ("FONTSIZE", (0, 0), (-1, -1), 9.5),
+            ("GRID", (0, 0), (-1, -1), 0.4, colors.HexColor("#9bb4d4")),
+            ("TOPPADDING", (0, 0), (-1, -1), 4),
+            ("BOTTOMPADDING", (0, 0), (-1, -1), 4),
+            ("BACKGROUND", (0, 0), (-1, -1), colors.HexColor("#f3f6fb")),
+            ("TEXTCOLOR", (0, 0), (-1, -1), colors.HexColor("#1a3c6e")),
+        ]))
+        story.append(key_tbl)
 
     doc.build(story)
 
@@ -411,5 +412,5 @@ if __name__ == "__main__":
         assert len(opts) == 4, f"Q{idx} does not have 4 options"
         assert 0 <= ans <= 3, f"Q{idx} has invalid answer index"
     out = "Design_Thinking_A_Primer_MCQ.pdf"
-    build_pdf(out)
-    print(f"PDF generated: {out} with {len(QUESTIONS)} questions.")
+    build_pdf(out, include_answer_key=False)
+    print(f"PDF generated (no answer key): {out} with {len(QUESTIONS)} questions.")
